@@ -2,8 +2,9 @@ mapboxgl.accessToken = 'pk.eyJ1IjoibWlsZXNrcmVsbCIsImEiOiJja3hqNXlmY2gzazEyMnRxa
 const map = new mapboxgl.Map({
     container: 'map', // container ID
     style: 'mapbox://styles/mapbox/streets-v11', // style URL
-    center: [-74.5, 40], // starting position [lng, lat]
-    zoom: 9, // starting zoom
+    center: [-74.45, 40.5], // starting position [lng, lat]
+    zoom: 15, // starting zoom
+    maxBounds: [[-75.56, 38.92], [-73.89, 41.36]], // restrict pan and zoom area
     touchPitch: false, // disable pitch gesture
 });
 
