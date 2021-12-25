@@ -35,17 +35,38 @@ function setSelectedPlace(placeType, feature, lngLat) {
     let html;
     switch (placeType) {
         case 'building': {
-            html = feature.properties['BldgName'];
+            const buildingNumber = feature.properties['BldgNum'];
+            const photoUrl = `https://storage.googleapis.com/rutgers-campus-map-building-images-prod/${buildingNumber}/00.jpg`;
+            let extraInfoHtml = '';
+            if (feature.properties['AlertLinks']) {
+                extraInfoHtml += `<p><b>Alert:</b> ${feature.properties['AlertLinks']}</p>`;
+            }
+            if (feature.properties['Description']) {
+                extraInfoHtml += `<p>${feature.properties['Description']}</p>`;
+            }
+            if (feature.properties['Website']) {
+                extraInfoHtml += `<p><b>Website:</b> <a href='${feature.properties['Website']}' target='_blank'>${feature.properties['Website']}</a></p>`;
+            }
+            html = `<h3 class='centerText'>${feature.properties['BldgName']}</h3>
+            <div class='popup'>
+                <a href=${photoUrl} target='_blank'><img width='100vh' height='100vh' style='margin: 1vh' src=${photoUrl}></a>
+                <div>
+                    <p class='centerText'>Building number: ${buildingNumber}</p>
+                    <p class='centerText'>${feature.properties['BldgAddr']}<br>
+                    ${feature.properties['City']}, ${feature.properties['State']}</p>
+                </div>
+            </div>
+            ${extraInfoHtml}`;
             map.setPaintProperty('selected place', 'fill-opacity', 1);
             break;
         }
         case 'lot': {
-            html = feature.properties['Lot_Name'];
+            html = `<h3 style='text-align: center'>🅿 ${feature.properties['Lot_Name']}</h3>`;
             map.setPaintProperty('selected place', 'fill-opacity', 0.5);
             break;
         }
     }
-    new mapboxgl.Popup()
+    new mapboxgl.Popup({maxWidth: '300px'})
         .setLngLat(lngLat)
         .setHTML(html)
         .addTo(map)
