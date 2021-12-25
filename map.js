@@ -28,24 +28,45 @@ map.addControl(
 // Add zoom and rotation controls to the map.
 map.addControl(new mapboxgl.NavigationControl());
 
+function setSelectedPlace(placeType, feature, lngLat) {
+    // TODO: If you click and then zoom in a lot, we should reselect the feature
+    map.getSource('selected place').setData(feature);
+
+    let html;
+    switch (placeType) {
+        case 'building': {
+            html = feature.properties['BldgName'];
+            map.setPaintProperty('selected place', 'fill-opacity', 1);
+            break;
+        }
+        case 'lot': {
+            html = feature.properties['Lot_Name'];
+            map.setPaintProperty('selected place', 'fill-opacity', 0.5);
+            break;
+        }
+    }
+    new mapboxgl.Popup()
+        .setLngLat(lngLat)
+        .setHTML(html)
+        .addTo(map)
+        .on('close', () => {
+            map.getSource('selected place').setData({type: 'Feature'}); // empty source
+        });
+}
+
 map.on('load', () => {
     map.removeLayer('transit-label') // Remove layer for Mapbox Streets bus stop icons
+    map.addSource('selected place', {type: 'geojson', data: {type: 'Feature'}});
+    map.addLayer({
+        id: 'selected place',
+        type: 'fill',
+        source: 'selected place',
+        paint: {'fill-color': '#cc0033'},
+    });
     map.on('mouseleave', 'Rutgers parking lots', () => map.getCanvas().style.cursor = '');
     map.on('mouseleave', 'Rutgers buildings', () => map.getCanvas().style.cursor = '');
     map.on('mouseenter', 'Rutgers parking lots', () => map.getCanvas().style.cursor = 'pointer');
     map.on('mouseenter', 'Rutgers buildings', () => map.getCanvas().style.cursor = 'pointer');
-    map.on('click', 'Rutgers parking lots', e => {
-        const lotName = e.features[0].properties['Lot_Name'];
-        new mapboxgl.Popup()
-            .setLngLat(e.lngLat)
-            .setHTML(lotName)
-            .addTo(map);
-    });
-    map.on('click', 'Rutgers buildings', e => {
-        const buildingName = e.features[0].properties['BldgName'];
-        new mapboxgl.Popup()
-            .setLngLat(e.lngLat)
-            .setHTML(buildingName)
-            .addTo(map);
-    });
+    map.on('click', 'Rutgers parking lots', e => setSelectedPlace('lot', e.features[0], e.lngLat));
+    map.on('click', 'Rutgers buildings', e => setSelectedPlace('building', e.features[0], e.lngLat));
 });
