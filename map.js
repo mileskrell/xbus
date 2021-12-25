@@ -30,4 +30,22 @@ map.addControl(new mapboxgl.NavigationControl());
 
 map.on('load', () => {
     map.removeLayer('transit-label') // Remove layer for Mapbox Streets bus stop icons
+    map.on('mouseleave', 'Rutgers parking lots', () => map.getCanvas().style.cursor = '');
+    map.on('mouseleave', 'Rutgers buildings', () => map.getCanvas().style.cursor = '');
+    map.on('mouseenter', 'Rutgers parking lots', () => map.getCanvas().style.cursor = 'pointer');
+    map.on('mouseenter', 'Rutgers buildings', () => map.getCanvas().style.cursor = 'pointer');
+    map.on('click', 'Rutgers parking lots', e => {
+        const lotName = e.features[0].properties['Lot_Name'];
+        new mapboxgl.Popup()
+            .setLngLat(e.lngLat)
+            .setHTML(lotName)
+            .addTo(map);
+    });
+    map.on('click', 'Rutgers buildings', e => {
+        const buildingName = e.features[0].properties['BldgName'];
+        new mapboxgl.Popup()
+            .setLngLat(e.lngLat)
+            .setHTML(buildingName)
+            .addTo(map);
+    });
 });
