@@ -81,7 +81,6 @@ map.on('load', () => {
         if (error) throw error;
         return map.addImage('vehicle', image, {sdf: true});
     });
-    map.removeLayer('transit-label') // Remove layer for Mapbox Streets bus stop icons
     map.addSource('selected place', {type: 'geojson', data: {type: 'Feature'}});
     map.addLayer({
         id: 'selected place',
