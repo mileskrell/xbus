@@ -73,6 +73,10 @@ function setSelectedPlace(placeType, feature, lngLat) {
 }
 
 map.on('load', () => {
+    map.loadImage('stop.png', (error, image) => {
+        if (error) throw error;
+        return map.addImage('stop', image, {sdf: true});
+    });
     map.loadImage('navigation.png', (error, image) => {
         if (error) throw error;
         return map.addImage('vehicle', image, {sdf: true});
@@ -84,6 +88,18 @@ map.on('load', () => {
         type: 'fill',
         source: 'selected place',
         paint: {'fill-color': '#cc0033'},
+    }); // TODO: Selected place layer should always be directly above whatever layer was selected
+    map.addSource('stops', {type: 'geojson', data: {type: 'Feature'}});
+    map.addLayer({
+        id: 'stops',
+        type: 'symbol',
+        source: 'stops',
+        paint: {'icon-color': '#000000'},
+        layout: {
+            'icon-image': 'stop',
+            'icon-size': ['interpolate', ['linear'], ['zoom'], 12, 0.25, 18, 1],
+            'icon-allow-overlap': true,
+        },
     });
     map.addSource('vehicles', {type: 'geojson', data: {type: 'Feature'}});
     map.addLayer({
@@ -91,7 +107,12 @@ map.on('load', () => {
         type: 'symbol',
         source: 'vehicles',
         paint: {'icon-color': ['get', 'route_color']},
-        layout: {'icon-image': 'vehicle', 'icon-rotate': ['get', 'heading'], 'icon-allow-overlap': true}
+        layout: {
+            'icon-image': 'vehicle',
+            'icon-rotate': ['get', 'heading'],
+            'icon-size': ['interpolate', ['linear'], ['zoom'], 10, 0.5, 15, 1],
+            'icon-allow-overlap': true,
+        },
     });
     map.on('mouseleave', 'Rutgers parking lots', () => map.getCanvas().style.cursor = '');
     map.on('mouseleave', 'Rutgers buildings', () => map.getCanvas().style.cursor = '');
@@ -120,6 +141,18 @@ map.on('load', () => {
         vehicles.forEach(vehicle => vehicleIdToVehicleMap[vehicle.vehicle_id] = vehicle);
 
         vehicles.forEach(vehicle => vehicle.route = routeIdToRouteMap[vehicle.route_id]);
+
+        const stopFeatures = stops.map(stop => ({
+            type: 'Feature',
+            geometry: {
+                type: 'Point',
+                coordinates: [stop.location.lng, stop.location.lat],
+            },
+            properties: {
+                stop_id: stop.stop_id,
+            },
+        }));
+        map.getSource('stops').setData({type: 'FeatureCollection', features: stopFeatures});
 
         if (!oldVehicleIdToVehicleMap) {
             const vehicleFeatures = vehicles.map(vehicle => ({
