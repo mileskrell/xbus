@@ -9,6 +9,11 @@ const map = new mapboxgl.Map({
     touchPitch: false, // disable pitch gesture
 });
 
+// disable map rotation using right click + drag
+map.dragRotate.disable();
+// disable map rotation using touch rotation gesture
+map.touchZoomRotate.disableRotation();
+
 // Add geolocate control to the map.
 map.addControl(
     new mapboxgl.GeolocateControl({
@@ -21,9 +26,6 @@ map.addControl(
         showUserHeading: true
     })
 );
-
-// Add zoom and rotation controls to the map.
-map.addControl(new mapboxgl.NavigationControl());
 
 // Add controls to fly to NB/NWK/CMDN
 map.addControl(new FlyToCampusControl());
