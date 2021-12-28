@@ -34,8 +34,25 @@ function setSelectedPlace(tappedLayerId, feature, lngLat) {
     // TODO: If you click and then zoom in a lot, we should reselect the feature
     map.getSource('selected place').setData(feature);
 
-    // Move selected place layer above tapped layer
-    map.moveLayer('selected place', tappedLayerId);
+    if (map.getLayer('selected place')) map.removeLayer('selected place');
+    // Add selected place layer below tapped layer (b/c there's no method to add it above)
+    map.addLayer(tappedLayerId === 'stops' ? {
+        id: 'selected place',
+        type: 'symbol',
+        source: 'selected place',
+        paint: {'icon-color': '#cc0033'},
+        layout: {
+            'icon-image': 'stop',
+            'icon-size': ['interpolate', ['linear'], ['zoom'], 12, 0.25, 18, 1],
+            'icon-allow-overlap': true,
+        },
+    } : {
+        id: 'selected place',
+        type: 'fill',
+        source: 'selected place',
+        paint: {'fill-color': '#cc0033'},
+    }, tappedLayerId);
+    // Now move tapped layer below selected place layer
     map.moveLayer(tappedLayerId, 'selected place');
 
     let html;
@@ -63,12 +80,15 @@ function setSelectedPlace(tappedLayerId, feature, lngLat) {
                 </div>
             </div>
             ${extraInfoHtml}`;
-            map.setPaintProperty('selected place', 'fill-opacity', 1);
             break;
         }
         case 'Rutgers parking lots': {
             html = `<h3 style='text-align: center'>🅿 ${feature.properties['Lot_Name']}</h3>`;
             map.setPaintProperty('selected place', 'fill-opacity', 0.5);
+            break;
+        }
+        case 'stops': {
+            html = `<h3 style='text-align: center'>🚏 ${feature.properties['stop_name']}</h3>`;
             break;
         }
     }
@@ -91,12 +111,6 @@ map.on('load', () => {
         return map.addImage('vehicle', image, {sdf: true});
     });
     map.addSource('selected place', {type: 'geojson', data: {type: 'Feature'}});
-    map.addLayer({
-        id: 'selected place',
-        type: 'fill',
-        source: 'selected place',
-        paint: {'fill-color': '#cc0033'},
-    });
     map.addSource('stops', {type: 'geojson', data: {type: 'Feature'}});
     map.addLayer({
         id: 'stops',
@@ -124,10 +138,14 @@ map.on('load', () => {
     });
     map.on('mouseleave', 'Rutgers parking lots', () => map.getCanvas().style.cursor = '');
     map.on('mouseleave', 'Rutgers buildings', () => map.getCanvas().style.cursor = '');
+    map.on('mouseleave', 'stops', () => map.getCanvas().style.cursor = '');
     map.on('mouseenter', 'Rutgers parking lots', () => map.getCanvas().style.cursor = 'pointer');
     map.on('mouseenter', 'Rutgers buildings', () => map.getCanvas().style.cursor = 'pointer');
+    map.on('mouseenter', 'stops', () => map.getCanvas().style.cursor = 'pointer');
+
     map.on('click', 'Rutgers parking lots', e => setSelectedPlace('Rutgers parking lots', e.features[0], e.lngLat));
     map.on('click', 'Rutgers buildings', e => setSelectedPlace('Rutgers buildings', e.features[0], e.lngLat));
+    map.on('click', 'stops', e => setSelectedPlace('stops', e.features[0], e.lngLat));
 
     async function fetchBusStuff() {
         routes = (await (await fetch('https://transloc-api-1-2.p.rapidapi.com/routes.json?agencies=1323', translocRequestInit)).json())['data'][1323];
@@ -158,6 +176,7 @@ map.on('load', () => {
             },
             properties: {
                 stop_id: stop.stop_id,
+                stop_name: stop.name,
             },
         }));
         map.getSource('stops').setData({type: 'FeatureCollection', features: stopFeatures});
