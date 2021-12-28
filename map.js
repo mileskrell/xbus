@@ -30,13 +30,17 @@ map.addControl(
 // Add controls to fly to NB/NWK/CMDN
 map.addControl(new FlyToCampusControl());
 
-function setSelectedPlace(placeType, feature, lngLat) {
+function setSelectedPlace(tappedLayerId, feature, lngLat) {
     // TODO: If you click and then zoom in a lot, we should reselect the feature
     map.getSource('selected place').setData(feature);
 
+    // Move selected place layer above tapped layer
+    map.moveLayer('selected place', tappedLayerId);
+    map.moveLayer(tappedLayerId, 'selected place');
+
     let html;
-    switch (placeType) {
-        case 'building': {
+    switch (tappedLayerId) {
+        case 'Rutgers buildings': {
             const buildingNumber = feature.properties['BldgNum'];
             const photoUrl = `https://storage.googleapis.com/rutgers-campus-map-building-images-prod/${buildingNumber}/00.jpg`;
             let extraInfoHtml = '';
@@ -62,7 +66,7 @@ function setSelectedPlace(placeType, feature, lngLat) {
             map.setPaintProperty('selected place', 'fill-opacity', 1);
             break;
         }
-        case 'lot': {
+        case 'Rutgers parking lots': {
             html = `<h3 style='text-align: center'>🅿 ${feature.properties['Lot_Name']}</h3>`;
             map.setPaintProperty('selected place', 'fill-opacity', 0.5);
             break;
@@ -92,7 +96,7 @@ map.on('load', () => {
         type: 'fill',
         source: 'selected place',
         paint: {'fill-color': '#cc0033'},
-    }); // TODO: Selected place layer should always be directly above whatever layer was selected
+    });
     map.addSource('stops', {type: 'geojson', data: {type: 'Feature'}});
     map.addLayer({
         id: 'stops',
@@ -122,8 +126,8 @@ map.on('load', () => {
     map.on('mouseleave', 'Rutgers buildings', () => map.getCanvas().style.cursor = '');
     map.on('mouseenter', 'Rutgers parking lots', () => map.getCanvas().style.cursor = 'pointer');
     map.on('mouseenter', 'Rutgers buildings', () => map.getCanvas().style.cursor = 'pointer');
-    map.on('click', 'Rutgers parking lots', e => setSelectedPlace('lot', e.features[0], e.lngLat));
-    map.on('click', 'Rutgers buildings', e => setSelectedPlace('building', e.features[0], e.lngLat));
+    map.on('click', 'Rutgers parking lots', e => setSelectedPlace('Rutgers parking lots', e.features[0], e.lngLat));
+    map.on('click', 'Rutgers buildings', e => setSelectedPlace('Rutgers buildings', e.features[0], e.lngLat));
 
     async function fetchBusStuff() {
         routes = (await (await fetch('https://transloc-api-1-2.p.rapidapi.com/routes.json?agencies=1323', translocRequestInit)).json())['data'][1323];
