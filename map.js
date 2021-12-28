@@ -4,7 +4,7 @@ const map = new mapboxgl.Map({
     container: 'map', // container ID
     style: 'mapbox://styles/mileskrell/ckxl9zz5632ey14oafkathv0c', // style URL
     center: [-74.45, 40.5], // starting position [lng, lat]
-    zoom: 15, // starting zoom
+    zoom: 13, // starting zoom
     maxBounds: [[xMin, yMin], [xMax, yMax]], // restrict pan and zoom area
     touchPitch: false, // disable pitch gesture
 });
@@ -24,6 +24,9 @@ map.addControl(
 
 // Add zoom and rotation controls to the map.
 map.addControl(new mapboxgl.NavigationControl());
+
+// Add controls to fly to NB/NWK/CMDN
+map.addControl(new FlyToCampusControl());
 
 function setSelectedPlace(placeType, feature, lngLat) {
     // TODO: If you click and then zoom in a lot, we should reselect the feature
