@@ -1,5 +1,5 @@
 mapboxgl.accessToken = 'pk.eyJ1IjoibWlsZXNrcmVsbCIsImEiOiJja3hqNXlmY2gzazEyMnRxaDA1Y3J2MjJzIn0.Uz5PQwiiTDyv3fr8YTTwpA';
-let routes, stops, vehicles, oldVehicleIdToVehicleMap;
+let routes, stops, vehicles, oldVehicleIdToVehicleMap, selectedLayerId, selectedFeature;
 const map = new mapboxgl.Map({
     container: 'map', // container ID
     style: 'mapbox://styles/mileskrell/ckxl9zz5632ey14oafkathv0c', // style URL
@@ -33,6 +33,8 @@ map.addControl(new FlyToCampusControl());
 function setSelectedPlace(tappedLayerId, feature, lngLat) {
     // TODO: If you click and then zoom in a lot, we should reselect the feature
     map.getSource('selected place').setData(feature);
+    selectedLayerId = tappedLayerId;
+    selectedFeature = feature;
 
     if (map.getLayer('selected place')) map.removeLayer('selected place');
     // Add selected place layer below tapped layer (b/c there's no method to add it above)
@@ -44,6 +46,17 @@ function setSelectedPlace(tappedLayerId, feature, lngLat) {
         layout: {
             'icon-image': 'stop',
             'icon-size': ['interpolate', ['linear'], ['zoom'], 12, 0.25, 18, 1],
+            'icon-allow-overlap': true,
+        },
+    } : tappedLayerId === 'vehicles' ? {
+        id: 'selected place',
+        type: 'symbol',
+        source: 'selected place',
+        paint: {'icon-color': '#cc0033'},
+        layout: {
+            'icon-image': 'vehicle',
+            'icon-rotate': ['get', 'heading'],
+            'icon-size': ['interpolate', ['linear'], ['zoom'], 10, 0.5, 15, 1],
             'icon-allow-overlap': true,
         },
     } : {
@@ -91,6 +104,10 @@ function setSelectedPlace(tappedLayerId, feature, lngLat) {
             html = `<h3 style='text-align: center'>🚏 ${feature.properties['stop_name']}</h3>`;
             break;
         }
+        case 'vehicles': {
+            html = `<h3 style='text-align: center'>🚌 ID ${feature.properties['vehicle_id']}</h3>`;
+            break;
+        }
     }
     new mapboxgl.Popup({maxWidth: '300px'})
         .setLngLat(lngLat)
@@ -98,6 +115,7 @@ function setSelectedPlace(tappedLayerId, feature, lngLat) {
         .addTo(map)
         .on('close', () => {
             map.getSource('selected place').setData({type: 'Feature'}); // empty source
+            selectedLayerId = selectedFeature = undefined;
         });
 }
 
@@ -139,13 +157,16 @@ map.on('load', () => {
     map.on('mouseleave', 'Rutgers parking lots', () => map.getCanvas().style.cursor = '');
     map.on('mouseleave', 'Rutgers buildings', () => map.getCanvas().style.cursor = '');
     map.on('mouseleave', 'stops', () => map.getCanvas().style.cursor = '');
+    map.on('mouseleave', 'vehicles', () => map.getCanvas().style.cursor = '');
     map.on('mouseenter', 'Rutgers parking lots', () => map.getCanvas().style.cursor = 'pointer');
     map.on('mouseenter', 'Rutgers buildings', () => map.getCanvas().style.cursor = 'pointer');
     map.on('mouseenter', 'stops', () => map.getCanvas().style.cursor = 'pointer');
+    map.on('mouseenter', 'vehicles', () => map.getCanvas().style.cursor = 'pointer');
 
     map.on('click', 'Rutgers parking lots', e => setSelectedPlace('Rutgers parking lots', e.features[0], e.lngLat));
     map.on('click', 'Rutgers buildings', e => setSelectedPlace('Rutgers buildings', e.features[0], e.lngLat));
     map.on('click', 'stops', e => setSelectedPlace('stops', e.features[0], e.lngLat));
+    map.on('click', 'vehicles', e => setSelectedPlace('vehicles', e.features[0], e.lngLat));
 
     async function fetchBusStuff() {
         routes = (await (await fetch('https://transloc-api-1-2.p.rapidapi.com/routes.json?agencies=1323', translocRequestInit)).json())['data'][1323];
@@ -208,7 +229,7 @@ map.on('load', () => {
                     const curLng = oldVehicle.location.lng + counter / steps * lngDiff;
                     const headingDiff = newVehicle.heading - oldVehicle.heading;
                     const curHeading = oldVehicle.heading + counter / steps * headingDiff;
-                    curVehicleFeatures.push({
+                    const curVehicleFeature = {
                         type: 'Feature',
                         geometry: {
                             type: 'Point',
@@ -219,7 +240,11 @@ map.on('load', () => {
                             heading: curHeading,
                             route_color: '#' + newVehicle.route.color,
                         },
-                    });
+                    };
+                    curVehicleFeatures.push(curVehicleFeature);
+                    if (selectedLayerId === 'vehicles' && selectedFeature.properties.vehicle_id === newVehicle.vehicle_id) {
+                        map.getSource('selected place').setData(curVehicleFeature);
+                    }
                 });
                 map.getSource('vehicles').setData({type: 'FeatureCollection', features: curVehicleFeatures});
                 await sleep(20);
