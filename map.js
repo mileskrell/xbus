@@ -1,5 +1,5 @@
 mapboxgl.accessToken = 'pk.eyJ1IjoibWlsZXNrcmVsbCIsImEiOiJja3hqNXlmY2gzazEyMnRxaDA1Y3J2MjJzIn0.Uz5PQwiiTDyv3fr8YTTwpA';
-let routes, stops, vehicles, oldVehicleIdToVehicleMap, selectedLayerId, selectedFeature;
+let routes, segments, stops, vehicles, oldVehicleIdToVehicleMap, selectedLayerId, selectedFeature;
 const map = new mapboxgl.Map({
     container: 'map', // container ID
     style: 'mapbox://styles/mileskrell/ckxl9zz5632ey14oafkathv0c', // style URL
@@ -128,6 +128,16 @@ map.on('load', () => {
         if (error) throw error;
         return map.addImage('vehicle', image, {sdf: true});
     });
+    map.addSource('routes', {type: 'geojson', data: {type: 'Feature'}});
+    map.addLayer({
+        id: 'routes',
+        type: 'line',
+        source: 'routes',
+        paint: {
+            'line-color': ['get', 'route_color'],
+            'line-width': 3,
+        },
+    }, 'Rutgers buildings');
     map.addSource('selected place', {type: 'geojson', data: {type: 'Feature'}});
     map.addSource('stops', {type: 'geojson', data: {type: 'Feature'}});
     map.addLayer({
@@ -170,6 +180,7 @@ map.on('load', () => {
 
     async function fetchBusStuff() {
         routes = (await (await fetch('https://transloc-api-1-2.p.rapidapi.com/routes.json?agencies=1323', translocRequestInit)).json())['data'][1323];
+        segments = (await (await fetch("https://transloc-api-1-2.p.rapidapi.com/segments.json?agencies=1323", translocRequestInit)).json())['data'];
         stops = (await (await fetch("https://transloc-api-1-2.p.rapidapi.com/stops.json?agencies=1323", translocRequestInit)).json())['data'];
         vehicles = (await (await fetch("https://transloc-api-1-2.p.rapidapi.com/vehicles.json?agencies=1323", translocRequestInit)).json())['data'];
         if (vehicles) {
@@ -188,6 +199,19 @@ map.on('load', () => {
         vehicles.forEach(vehicle => vehicleIdToVehicleMap[vehicle.vehicle_id] = vehicle);
 
         vehicles.forEach(vehicle => vehicle.route = routeIdToRouteMap[vehicle.route_id]);
+
+        const segmentFeatures = routes.filter(it => it.is_active).map(route => ({
+            type: 'Feature',
+            properties: {
+                route_color: '#' + route.color,
+            },
+            geometry: {
+                type: 'MultiLineString',
+                // TODO: Do I need to care about whether a route says it includes a segment "forward" or "backward"?
+                coordinates: route.segments.map(route => polyline.decode(segments[route[0]]).map(latLng => [latLng[1], latLng[0]])),
+            },
+        }));
+        map.getSource('routes').setData({type: 'FeatureCollection', features: segmentFeatures})
 
         const stopFeatures = stops.map(stop => ({
             type: 'Feature',
