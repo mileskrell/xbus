@@ -1,5 +1,5 @@
 mapboxgl.accessToken = 'pk.eyJ1IjoibWlsZXNrcmVsbCIsImEiOiJja3hqNXlmY2gzazEyMnRxaDA1Y3J2MjJzIn0.Uz5PQwiiTDyv3fr8YTTwpA';
-let routes, segments, stops, vehicles, oldVehicleIdToVehicleMap, selectedLayerId, selectedFeature;
+let routes, segments, stops, vehicles, oldVehicleIdToVehicleMap, selectedLayerId, selectedFeature, selectedPlaceSheet;
 const map = new mapboxgl.Map({
     container: 'map', // container ID
     style: 'mapbox://styles/mileskrell/ckxl9zz5632ey14oafkathv0c', // style URL
@@ -30,7 +30,11 @@ map.addControl(
 // Add controls to fly to NB/NWK/CMDN
 map.addControl(new FlyToCampusControl());
 
-function setSelectedPlace(tappedLayerId, feature, lngLat) {
+function setSelectedPlace(tappedLayerId, feature) {
+    if (selectedPlaceSheet) {
+        document.body.removeChild(selectedPlaceSheet); // remove place sheet
+        selectedPlaceSheet = undefined;
+    }
     if (!tappedLayerId) {
         map.getSource('selected place').setData({type: 'Feature'}); // empty source
         selectedLayerId = selectedFeature = undefined;
@@ -88,8 +92,9 @@ function setSelectedPlace(tappedLayerId, feature, lngLat) {
             if (feature.properties['Website']) {
                 extraInfoHtml += `<p><b>Website:</b> <a href='${feature.properties['Website']}' target='_blank'>${feature.properties['Website']}</a></p>`;
             }
-            html = `<h3 class='centerText'>${feature.properties['BldgName']}</h3>
-            <div class='popup'>
+            html = `<div id="selectedPlaceSheet">
+            <h3 class='centerText'>${feature.properties['BldgName']}</h3>
+            <div id='buildingPhotoNumberAddress'>
                 <a href=${photoUrl} target='_blank'><img width='100vh' height='100vh' style='margin: 1vh' src=${photoUrl}></a>
                 <div>
                     <p class='centerText'>Building number: ${buildingNumber}</p>
@@ -97,27 +102,28 @@ function setSelectedPlace(tappedLayerId, feature, lngLat) {
                     ${feature.properties['City']}, ${feature.properties['State']}</p>
                 </div>
             </div>
-            ${extraInfoHtml}`;
+            ${extraInfoHtml}
+            </div>`;
             break;
         }
         case 'Rutgers parking lots': {
-            html = `<h3 style='text-align: center'>🅿 ${feature.properties['Lot_Name']}</h3>`;
+            html = `<div id="selectedPlaceSheet"><h3 style='text-align: center'>🅿 ${feature.properties['Lot_Name']}</h3></div>`;
             map.setPaintProperty('selected place', 'fill-opacity', 0.5);
             break;
         }
         case 'stops': {
-            html = `<h3 style='text-align: center'>🚏 ${feature.properties['stop_name']}</h3>`;
+            html = `<div id="selectedPlaceSheet"><h3 style='text-align: center'>🚏 ${feature.properties['stop_name']}</h3></div>`;
             break;
         }
         case 'vehicles': {
-            html = `<h3 style='text-align: center'>🚌 ID ${feature.properties['vehicle_id']}</h3>`;
+            html = `<div id="selectedPlaceSheet"><h3 style='text-align: center'>🚌 ID ${feature.properties['vehicle_id']}</h3></div>`;
             break;
         }
     }
-    new mapboxgl.Popup({maxWidth: '300px'})
-        .setLngLat(lngLat)
-        .setHTML(html)
-        .addTo(map);
+    const template = document.createElement('template');
+    template.innerHTML = html;
+    selectedPlaceSheet = template.content.firstChild
+    document.body.appendChild(selectedPlaceSheet);
 }
 
 map.on('load', () => {
@@ -176,22 +182,22 @@ map.on('load', () => {
     map.on('click', e => {
         const tappedVehicles = map.queryRenderedFeatures(e.point, {layers: ['vehicles']});
         if (tappedVehicles.length > 0) {
-            setSelectedPlace('vehicles', tappedVehicles[0], e.lngLat);
+            setSelectedPlace('vehicles', tappedVehicles[0]);
             return;
         }
         const tappedStops = map.queryRenderedFeatures(e.point, {layers: ['stops']});
         if (tappedStops.length > 0) {
-            setSelectedPlace('stops', tappedStops[0], e.lngLat);
+            setSelectedPlace('stops', tappedStops[0]);
             return;
         }
         const tappedBuildings = map.queryRenderedFeatures(e.point, {layers: ['Rutgers buildings']});
         if (tappedBuildings.length > 0) {
-            setSelectedPlace('Rutgers buildings', tappedBuildings[0], e.lngLat);
+            setSelectedPlace('Rutgers buildings', tappedBuildings[0]);
             return;
         }
         const tappedParkingLots = map.queryRenderedFeatures(e.point, {layers: ['Rutgers parking lots']});
         if (tappedParkingLots.length > 0) {
-            setSelectedPlace('Rutgers parking lots', tappedParkingLots[0], e.lngLat);
+            setSelectedPlace('Rutgers parking lots', tappedParkingLots[0]);
             return;
         }
         setSelectedPlace(); // clear selection
