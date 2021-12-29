@@ -10,9 +10,9 @@ class FlyToCampusControl {
         this._container.classList.add('mapboxgl-ctrl', 'mapboxgl-ctrl-group');
         this._container.addEventListener('contextmenu', (e) => e.preventDefault());
 
-        this._createFlyToButton('NB', {center: [-74.45, 40.5], zoom: 13})
-        this._createFlyToButton('NWK', {center: [-74.18, 40.74], zoom: 14})
-        this._createFlyToButton('CMDN', {center: [-75.125, 39.948], zoom: 15})
+        this._createFlyToButton('NB', {center: [-74.45, 40.5], zoom: 12.5})
+        this._createFlyToButton('NWK', {center: [-74.18, 40.74], zoom: 13})
+        this._createFlyToButton('CMDN', {center: [-75.125, 39.948], zoom: 14})
 
         return this._container;
     }

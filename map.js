@@ -4,7 +4,7 @@ const map = new mapboxgl.Map({
     container: 'map', // container ID
     style: 'mapbox://styles/mileskrell/ckxl9zz5632ey14oafkathv0c', // style URL
     center: [-74.45, 40.5], // starting position [lng, lat]
-    zoom: 13, // starting zoom
+    zoom: 12.5, // starting zoom
     maxBounds: [[xMin, yMin], [xMax, yMax]], // restrict pan and zoom area
     touchPitch: false, // disable pitch gesture
 });
