@@ -200,17 +200,19 @@ map.on('load', () => {
 
         vehicles.forEach(vehicle => vehicle.route = routeIdToRouteMap[vehicle.route_id]);
 
-        const segmentFeatures = routes.filter(it => it.is_active).map(route => ({
-            type: 'Feature',
-            properties: {
-                route_color: '#' + route.color,
-            },
-            geometry: {
-                type: 'MultiLineString',
-                // TODO: Do I need to care about whether a route says it includes a segment "forward" or "backward"?
-                coordinates: route.segments.map(route => polyline.decode(segments[route[0]]).map(latLng => [latLng[1], latLng[0]])),
-            },
-        }));
+        const segmentFeatures = routes
+            .filter(route => vehicles.some(vehicle => vehicle.route_id === route.route_id))
+            .map(route => ({
+                type: 'Feature',
+                properties: {
+                    route_color: '#' + route.color,
+                },
+                geometry: {
+                    type: 'MultiLineString',
+                    // TODO: Do I need to care about whether a route says it includes a segment "forward" or "backward"?
+                    coordinates: route.segments.map(route => polyline.decode(segments[route[0]]).map(latLng => [latLng[1], latLng[0]])),
+                },
+            }));
         map.getSource('routes').setData({type: 'FeatureCollection', features: segmentFeatures})
 
         const stopFeatures = stops.map(stop => ({
