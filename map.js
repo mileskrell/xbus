@@ -31,6 +31,11 @@ map.addControl(
 map.addControl(new FlyToCampusControl());
 
 function setSelectedPlace(tappedLayerId, feature, lngLat) {
+    if (!tappedLayerId) {
+        map.getSource('selected place').setData({type: 'Feature'}); // empty source
+        selectedLayerId = selectedFeature = undefined;
+        return;
+    }
     // TODO: If you click and then zoom in a lot, we should reselect the feature
     map.getSource('selected place').setData(feature);
     selectedLayerId = tappedLayerId;
@@ -112,11 +117,7 @@ function setSelectedPlace(tappedLayerId, feature, lngLat) {
     new mapboxgl.Popup({maxWidth: '300px'})
         .setLngLat(lngLat)
         .setHTML(html)
-        .addTo(map)
-        .on('close', () => {
-            map.getSource('selected place').setData({type: 'Feature'}); // empty source
-            selectedLayerId = selectedFeature = undefined;
-        });
+        .addTo(map);
 }
 
 map.on('load', () => {
@@ -172,11 +173,29 @@ map.on('load', () => {
     map.on('mouseenter', 'Rutgers buildings', () => map.getCanvas().style.cursor = 'pointer');
     map.on('mouseenter', 'stops', () => map.getCanvas().style.cursor = 'pointer');
     map.on('mouseenter', 'vehicles', () => map.getCanvas().style.cursor = 'pointer');
-
-    map.on('click', 'Rutgers parking lots', e => setSelectedPlace('Rutgers parking lots', e.features[0], e.lngLat));
-    map.on('click', 'Rutgers buildings', e => setSelectedPlace('Rutgers buildings', e.features[0], e.lngLat));
-    map.on('click', 'stops', e => setSelectedPlace('stops', e.features[0], e.lngLat));
-    map.on('click', 'vehicles', e => setSelectedPlace('vehicles', e.features[0], e.lngLat));
+    map.on('click', e => {
+        const tappedVehicles = map.queryRenderedFeatures(e.point, {layers: ['vehicles']});
+        if (tappedVehicles.length > 0) {
+            setSelectedPlace('vehicles', tappedVehicles[0], e.lngLat);
+            return;
+        }
+        const tappedStops = map.queryRenderedFeatures(e.point, {layers: ['stops']});
+        if (tappedStops.length > 0) {
+            setSelectedPlace('stops', tappedStops[0], e.lngLat);
+            return;
+        }
+        const tappedBuildings = map.queryRenderedFeatures(e.point, {layers: ['Rutgers buildings']});
+        if (tappedBuildings.length > 0) {
+            setSelectedPlace('Rutgers buildings', tappedBuildings[0], e.lngLat);
+            return;
+        }
+        const tappedParkingLots = map.queryRenderedFeatures(e.point, {layers: ['Rutgers parking lots']});
+        if (tappedParkingLots.length > 0) {
+            setSelectedPlace('Rutgers parking lots', tappedParkingLots[0], e.lngLat);
+            return;
+        }
+        setSelectedPlace(); // clear selection
+    });
 
     async function fetchBusStuff() {
         routes = (await (await fetch('https://transloc-api-1-2.p.rapidapi.com/routes.json?agencies=1323', translocRequestInit)).json())['data'][1323];
