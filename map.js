@@ -114,7 +114,6 @@ function setSelectedPlace(tappedLayerId, feature) {
             break;
         }
         case 'stops': {
-            // TODO: Update sheet whenever data updates
             const arrivalEstimates = JSON.parse(selectedFeature.properties.arrival_estimates);
 
             const arrivals = routes.filter(route => arrivalEstimates.some(it => it.route_id === route.route_id))
@@ -325,6 +324,8 @@ map.on('load', () => {
             }
         }
         oldVehicleIdToVehicleMap = vehicleIdToVehicleMap;
+
+        setSelectedPlace(selectedLayerId, selectedFeature); // update "selected place" sheet
 
         setTimeout(fetchBusStuff, 5000);
     }
