@@ -2,6 +2,12 @@ function sleep(ms) {
     return new Promise(resolve => setTimeout(resolve, ms));
 }
 
+function secondsToString(seconds) {
+    if (seconds <= 0) return 'Now';
+    if (seconds < 60) return '<1 min';
+    return `${Math.round(seconds / 60)} min`;
+}
+
 // For controls to fly to NB/NWK/CMDN. Depends on some Mapbox stuff (internals? maybe, oops)
 class FlyToCampusControl {
     onAdd(map) {

@@ -1,5 +1,7 @@
 mapboxgl.accessToken = 'pk.eyJ1IjoibWlsZXNrcmVsbCIsImEiOiJja3hqNXlmY2gzazEyMnRxaDA1Y3J2MjJzIn0.Uz5PQwiiTDyv3fr8YTTwpA';
-let routes, segments, stops, vehicles, oldVehicleIdToVehicleMap, selectedLayerId, selectedFeature, selectedPlaceSheet;
+let routes, segments, stops, vehicles,
+    routeIdToRouteMap, stopIdToStopMap, vehicleIdToVehicleMap, oldVehicleIdToVehicleMap,
+    selectedLayerId, selectedFeature, selectedPlaceSheet;
 const map = new mapboxgl.Map({
     container: 'map', // container ID
     style: 'mapbox://styles/mileskrell/ckxl9zz5632ey14oafkathv0c', // style URL
@@ -112,7 +114,24 @@ function setSelectedPlace(tappedLayerId, feature) {
             break;
         }
         case 'stops': {
-            html = `<div id="selectedPlaceSheet"><h3 style='text-align: center'>🚏 ${feature.properties['stop_name']}</h3></div>`;
+            // TODO: Update sheet whenever data updates
+            const arrivalEstimates = JSON.parse(selectedFeature.properties.arrival_estimates);
+
+            const arrivals = routes.filter(route => arrivalEstimates.some(it => it.route_id === route.route_id))
+                .map(route => ({
+                    routeName: route.short_name ? route.short_name : route.long_name,
+                    routeColor: route.color,
+                    arrivalEstimates: arrivalEstimates
+                        .filter(it => it.route_id === route.route_id)
+                        // .slice(0, 3) // only show next 3 arrivals per route
+                        .map(it => secondsToString((new Date(it.arrival_at) - Date.now()) / 1000)),
+                }))
+                .map(route => `<div class="routeBlock"><b style="color: #${route.routeColor}">${route.routeName}</b>` + route.arrivalEstimates.join('<br>') + `</div>`);
+
+            html = `<div id="selectedPlaceSheet">
+                <h3 style='text-align: center'>${feature.properties['stop_name']}</h3>
+                ${arrivals.length > 0 ? arrivals.join('<hr>') : '<div class="centerText">No pending arrivals</div>'}
+            </div>`;
             break;
         }
         case 'vehicles': {
@@ -216,11 +235,11 @@ map.on('load', () => {
         }
         console.log("fetched routes, stops, and vehicles");
 
-        const routeIdToRouteMap = {};
+        routeIdToRouteMap = {};
         routes.forEach(route => routeIdToRouteMap[route.route_id] = route);
-        const stopIdToStopMap = {};
+        stopIdToStopMap = {};
         stops.forEach(stop => stopIdToStopMap[stop.stop_id] = stop);
-        const vehicleIdToVehicleMap = {};
+        vehicleIdToVehicleMap = {};
         vehicles.forEach(vehicle => vehicleIdToVehicleMap[vehicle.vehicle_id] = vehicle);
 
         vehicles.forEach(vehicle => vehicle.route = routeIdToRouteMap[vehicle.route_id]);
@@ -249,6 +268,10 @@ map.on('load', () => {
             properties: {
                 stop_id: stop.stop_id,
                 stop_name: stop.name,
+                arrival_estimates: vehicles
+                    .flatMap(vehicle => vehicle.arrival_estimates)
+                    .filter(it => it.stop_id === stop.stop_id)
+                    .map(it => ({route_id: it.route_id, arrival_at: it.arrival_at}))
             },
         }));
         map.getSource('stops').setData({type: 'FeatureCollection', features: stopFeatures});
