@@ -109,7 +109,19 @@ function setSelectedPlace(tappedLayerId, feature) {
             break;
         }
         case 'Rutgers parking lots': {
-            html = `<div id="selectedPlaceSheet"><h3 style='text-align: center'>🅿 ${feature.properties['Lot_Name']}</h3></div>`;
+            let extraProps = '';
+            if (feature.properties['Contact']) {
+                const contact = feature.properties['Contact'].trim();
+                extraProps += `<p><b>Contact number:</b> <a href='tel:${contact}'>${contact}</a></p>`;
+            }
+            if (feature.properties['Website']) {
+                const website = feature.properties['Website'].trim();
+                extraProps += `<p><b>Website:</b> <a href='${website}'>${website}</a></p>`;
+            }
+            html = `<div id="selectedPlaceSheet">
+                <h3 class='centerText'>${feature.properties['Lot_Name'].trim()}</h3>
+                ${extraProps}
+            </div>`;
             map.setPaintProperty('selected place', 'fill-opacity', 0.5);
             break;
         }
