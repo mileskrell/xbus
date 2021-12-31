@@ -343,6 +343,7 @@ map.on('load', () => {
                     };
                     curVehicleFeatures.push(curVehicleFeature);
                     if (selectedLayerId === 'vehicles' && selectedFeature.properties.vehicle_id === newVehicle.vehicle_id) {
+                        selectedFeature = curVehicleFeature; // we reselect this whenever we get new data; this makes it appear at the latest spot
                         map.getSource('selected place').setData(curVehicleFeature);
                     }
                 });
@@ -352,7 +353,6 @@ map.on('load', () => {
         }
         oldVehicleIdToVehicleMap = vehicleIdToVehicleMap;
 
-        // FIXME: If a vehicle was selected, this will keep reselecting it at its original position on the map
         setSelectedPlace(selectedLayerId, selectedFeature); // update "selected place" sheet
 
         setTimeout(fetchBusStuff, 5000);
