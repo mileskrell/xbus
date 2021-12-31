@@ -139,16 +139,29 @@ function setSelectedPlace(tappedLayerId, feature) {
                         .map(it => secondsToString((new Date(it.arrival_at) - Date.now()) / 1000)),
                 }))
                 .sort((a, b) => a.routeName > b.routeName ? 1 : -1)
-                .map(route => `<div class="routeBlock"><b style="color: #${route.routeColor}">${route.routeName}</b>` + route.arrivalEstimates.join('<br>') + `</div>`);
+                .map(route => `<div class="sheetListEntry"><b style="color: #${route.routeColor}">${route.routeName}</b>` + route.arrivalEstimates.join('<br>') + `</div>`);
 
             html = `<div id="selectedPlaceSheet">
-                <h3 style='text-align: center'>${feature.properties['stop_name']}</h3>
+                <h3 class="centerText">${feature.properties['stop_name']}</h3>
                 ${arrivals.length > 0 ? arrivals.join('<hr>') : '<div class="centerText">No pending arrivals</div>'}
             </div>`;
             break;
         }
         case 'vehicles': {
-            html = `<div id="selectedPlaceSheet"><h3 style='text-align: center'>🚌 ID ${feature.properties['vehicle_id']}</h3></div>`;
+            // TODO: When setSelectedPlace() is called after new data comes in, keep old scroll position
+            const route = vehicleIdToVehicleMap[feature.properties['vehicle_id']].route;
+            const routeName = route.short_name ? route.short_name : route.long_name;
+            const arrivalEstimates = vehicleIdToVehicleMap[selectedFeature.properties.vehicle_id].arrival_estimates
+                .sort((a, b) => a.arrival_at > b.arrival_at ? 1 : -1)
+                .map(it => ({
+                    stopName: stopIdToStopMap[it.stop_id].name,
+                    arrivingIn: secondsToString((new Date(it.arrival_at) - Date.now()) / 1000),
+                }))
+                .map(it => `<div class="sheetListEntry"><b>${it.stopName}</b><div style="flex-shrink: 0">${it.arrivingIn}</div></div>`);
+            html = `<div id="selectedPlaceSheet">
+                <h3 class="centerText">${routeName}</h3>
+                ${arrivalEstimates.length > 0 ? arrivalEstimates.join('<br>') : '<div class="centerText">No pending arrivals</div>'}
+            </div>`;
             break;
         }
     }
@@ -339,6 +352,7 @@ map.on('load', () => {
         }
         oldVehicleIdToVehicleMap = vehicleIdToVehicleMap;
 
+        // FIXME: If a vehicle was selected, this will keep reselecting it at its original position on the map
         setSelectedPlace(selectedLayerId, selectedFeature); // update "selected place" sheet
 
         setTimeout(fetchBusStuff, 5000);
