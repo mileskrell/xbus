@@ -8,6 +8,10 @@ function secondsToString(seconds) {
     return `${Math.round(seconds / 60)} min`;
 }
 
+const nbPos = {center: [-74.45, 40.5], zoom: 12.5};
+const nwkPos = {center: [-74.18, 40.74], zoom: 13};
+const cmdnPos = {center: [-75.125, 39.948], zoom: 14};
+
 // For controls to fly to NB/NWK/CMDN. Depends on some Mapbox stuff (internals? maybe, oops)
 class FlyToCampusControl {
     onAdd(map) {
@@ -16,9 +20,9 @@ class FlyToCampusControl {
         this._container.classList.add('mapboxgl-ctrl', 'mapboxgl-ctrl-group');
         this._container.addEventListener('contextmenu', (e) => e.preventDefault());
 
-        this._createFlyToButton('NB', {center: [-74.45, 40.5], zoom: 12.5})
-        this._createFlyToButton('NWK', {center: [-74.18, 40.74], zoom: 13})
-        this._createFlyToButton('CMDN', {center: [-75.125, 39.948], zoom: 14})
+        this._createFlyToButton('NB', nbPos);
+        this._createFlyToButton('NWK', nwkPos);
+        this._createFlyToButton('CMDN', cmdnPos);
 
         return this._container;
     }
@@ -34,7 +38,10 @@ class FlyToCampusControl {
         button.classList.add('flyToCampusButton');
         button.type = 'button';
         button.textContent = buttonText;
-        button.addEventListener('click', () => this._map.flyTo(flyToOptions));
+        button.addEventListener('click', () => {
+            document.cookie = `campus=${buttonText}; expires=${new Date(Date.now() + 1000 * 60 * 60 * 24 * 365)}; path=/`;
+            this._map.flyTo(flyToOptions);
+        });
         return button;
     }
 

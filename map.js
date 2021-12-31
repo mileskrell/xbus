@@ -1,12 +1,16 @@
 mapboxgl.accessToken = 'pk.eyJ1IjoibWlsZXNrcmVsbCIsImEiOiJja3hqNXlmY2gzazEyMnRxaDA1Y3J2MjJzIn0.Uz5PQwiiTDyv3fr8YTTwpA';
+let startPos = nbPos;
+switch (document.cookie.substring(7)) {
+    case 'NWK': startPos = nwkPos; break;
+    case 'CMDN': startPos = cmdnPos; break;
+}
 let routes, segments, stops, vehicles,
     routeIdToRouteMap, stopIdToStopMap, vehicleIdToVehicleMap, oldVehicleIdToVehicleMap,
     selectedLayerId, selectedFeature, selectedPlaceSheet;
 const map = new mapboxgl.Map({
     container: 'map', // container ID
     style: 'mapbox://styles/mileskrell/ckxl9zz5632ey14oafkathv0c', // style URL
-    center: [-74.45, 40.5], // starting position [lng, lat]
-    zoom: 12.5, // starting zoom
+    ...startPos,
     maxBounds: [[xMin, yMin], [xMax, yMax]], // restrict pan and zoom area
     touchPitch: false, // disable pitch gesture
 });
