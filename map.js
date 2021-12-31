@@ -32,7 +32,8 @@ map.addControl(
 // Add controls to fly to NB/NWK/CMDN
 map.addControl(new FlyToCampusControl());
 
-function setSelectedPlace(tappedLayerId, feature) {
+function setSelectedPlace(tappedLayerId, feature, reselecting) {
+    const oldSheetScrollTop = selectedPlaceSheet ? selectedPlaceSheet.scrollTop : 0; // save old sheet scroll position
     if (selectedPlaceSheet) {
         document.body.removeChild(selectedPlaceSheet); // remove place sheet
         selectedPlaceSheet = undefined;
@@ -148,7 +149,6 @@ function setSelectedPlace(tappedLayerId, feature) {
             break;
         }
         case 'vehicles': {
-            // TODO: When setSelectedPlace() is called after new data comes in, keep old scroll position
             const route = vehicleIdToVehicleMap[feature.properties['vehicle_id']].route;
             const routeName = route.short_name ? route.short_name : route.long_name;
             const arrivalEstimates = vehicleIdToVehicleMap[selectedFeature.properties.vehicle_id].arrival_estimates
@@ -169,6 +169,9 @@ function setSelectedPlace(tappedLayerId, feature) {
     template.innerHTML = html;
     selectedPlaceSheet = template.content.firstChild
     document.body.appendChild(selectedPlaceSheet);
+    if (reselecting) {
+        selectedPlaceSheet.scrollTop = oldSheetScrollTop;
+    }
 }
 
 map.on('load', () => {
@@ -353,7 +356,7 @@ map.on('load', () => {
         }
         oldVehicleIdToVehicleMap = vehicleIdToVehicleMap;
 
-        setSelectedPlace(selectedLayerId, selectedFeature); // update "selected place" sheet
+        setSelectedPlace(selectedLayerId, selectedFeature, true); // update "selected place" sheet
 
         setTimeout(fetchBusStuff, 5000);
     }
