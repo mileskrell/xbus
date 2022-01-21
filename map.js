@@ -42,57 +42,63 @@ function setSelectedPlace(tappedLayerId, feature, reselecting) {
         document.body.removeChild(selectedPlaceSheet); // remove place sheet
         selectedPlaceSheet = undefined;
     }
-    if (map.getLayer('selected place')) map.removeLayer('selected place');
+
+    if (!reselecting) { // perf: don't update properties if selection hasn't changed
+        if (selectedLayerId === 'Rutgers buildings' || tappedLayerId === 'Rutgers buildings') { // perf: don't update if this layer hasn't been (un-)selected
+            map.setPaintProperty(
+                'Rutgers buildings',
+                'fill-color',
+                tappedLayerId === 'Rutgers buildings' ? // perf: don't evaluate case if this layer isn't selected
+                    ['case',
+                        // in case a building has BldgNum undefined, use 'x' to prevent matching with the undefined BldgNum of non-buildings
+                        ['==', ['get', 'BldgNum'], feature && feature.properties['BldgNum'] || 'x'],
+                        '#cc0033',
+                        '#6e767c'
+                    ] : '#6e767c'
+            );
+        }
+        if (selectedLayerId === 'Rutgers parking lots' || tappedLayerId === 'Rutgers parking lots') {
+            map.setPaintProperty(
+                'Rutgers parking lots',
+                'fill-color',
+                tappedLayerId === 'Rutgers parking lots' ?
+                    ['case',
+                        ['==', ['get', 'Parking_ID'], feature && feature.properties['Parking_ID'] || 'x'],
+                        '#cc0033',
+                        '#878787'
+                    ] : '#878787'
+            );
+        }
+        if (selectedLayerId === 'stops' || tappedLayerId === 'stops') {
+            map.setPaintProperty(
+                'stops',
+                'icon-color',
+                tappedLayerId === 'stops' ?
+                    ['case',
+                        ['==', ['get', 'stop_id'], feature && feature.properties['stop_id'] || 'x'],
+                        '#cc0033',
+                        '#000000'
+                    ] : '#000000'
+            );
+        }
+        if (selectedLayerId === 'vehicles' || tappedLayerId === 'vehicles') {
+            map.setPaintProperty('vehicles',
+                'icon-color',
+                tappedLayerId === 'vehicles' ?
+                    ['case',
+                        ['==', ['get', 'vehicle_id'], feature && feature.properties['vehicle_id'] || 'x'],
+                        '#cc0033',
+                        ['get', 'route_color']
+                    ] : ['get', 'route_color']
+            );
+        }
+    }
+
     selectedLayerId = tappedLayerId;
     selectedFeature = feature;
     if (!tappedLayerId) {
         return;
     }
-
-    // Add selected place layer below tapped layer (b/c there's no method to add it above)
-    map.addLayer(tappedLayerId === 'Rutgers buildings' ? {
-        id: 'selected place',
-        type: 'fill',
-        source: 'composite',
-        'source-layer': 'buildings_w_kta_props_2022-01-20',
-        paint: {'fill-color': '#cc0033'},
-        filter: ['==', ['get', 'BldgNum'], feature.properties['BldgNum']],
-    } : tappedLayerId === 'Rutgers parking lots' ? {
-        id: 'selected place',
-        type: 'fill',
-        source: 'composite',
-        'source-layer': 'parking_2022-01-20',
-        paint: {
-            'fill-color': '#cc0033',
-            'fill-opacity': 0.5,
-        },
-        filter: ['==', ['get', 'Lot_Name'], feature.properties['Lot_Name']],
-    } : tappedLayerId === 'stops' ? {
-        id: 'selected place',
-        type: 'symbol',
-        source: 'stops',
-        paint: {'icon-color': '#cc0033'},
-        layout: {
-            'icon-image': 'stop',
-            'icon-size': ['interpolate', ['linear'], ['zoom'], 12, 0.25, 18, 1],
-            'icon-allow-overlap': true,
-        },
-        filter: ['==', ['get', 'stop_id'], feature.properties['stop_id']],
-    } : {
-        id: 'selected place',
-        type: 'symbol',
-        source: 'vehicles',
-        paint: {'icon-color': '#cc0033'},
-        layout: {
-            'icon-image': 'vehicle',
-            'icon-rotate': ['get', 'heading'],
-            'icon-size': ['interpolate', ['linear'], ['zoom'], 10, 0.5, 15, 1],
-            'icon-allow-overlap': true,
-        },
-        filter: ['==', ['get', 'vehicle_id'], feature.properties['vehicle_id']],
-    }, tappedLayerId);
-    // Now move tapped layer below selected place layer
-    map.moveLayer(tappedLayerId, 'selected place');
 
     let html;
     switch (tappedLayerId) {
