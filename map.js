@@ -42,32 +42,46 @@ function setSelectedPlace(tappedLayerId, feature, reselecting) {
         document.body.removeChild(selectedPlaceSheet); // remove place sheet
         selectedPlaceSheet = undefined;
     }
-    if (!tappedLayerId) {
-        map.getSource('selected place').setData({type: 'Feature'}); // empty source
-        selectedLayerId = selectedFeature = undefined;
-        return;
-    }
-    // TODO: If you click and then zoom in a lot, we should reselect the feature
-    map.getSource('selected place').setData(feature);
+    if (map.getLayer('selected place')) map.removeLayer('selected place');
     selectedLayerId = tappedLayerId;
     selectedFeature = feature;
+    if (!tappedLayerId) {
+        return;
+    }
 
-    if (map.getLayer('selected place')) map.removeLayer('selected place');
     // Add selected place layer below tapped layer (b/c there's no method to add it above)
-    map.addLayer(tappedLayerId === 'stops' ? {
+    map.addLayer(tappedLayerId === 'Rutgers buildings' ? {
+        id: 'selected place',
+        type: 'fill',
+        source: 'composite',
+        'source-layer': 'buildings_w_kta_props_2022-01-20',
+        paint: {'fill-color': '#cc0033'},
+        filter: ['==', ['get', 'BldgNum'], feature.properties['BldgNum']],
+    } : tappedLayerId === 'Rutgers parking lots' ? {
+        id: 'selected place',
+        type: 'fill',
+        source: 'composite',
+        'source-layer': 'parking_2022-01-20',
+        paint: {
+            'fill-color': '#cc0033',
+            'fill-opacity': 0.5,
+        },
+        filter: ['==', ['get', 'Lot_Name'], feature.properties['Lot_Name']],
+    } : tappedLayerId === 'stops' ? {
         id: 'selected place',
         type: 'symbol',
-        source: 'selected place',
+        source: 'stops',
         paint: {'icon-color': '#cc0033'},
         layout: {
             'icon-image': 'stop',
             'icon-size': ['interpolate', ['linear'], ['zoom'], 12, 0.25, 18, 1],
             'icon-allow-overlap': true,
         },
-    } : tappedLayerId === 'vehicles' ? {
+        filter: ['==', ['get', 'stop_id'], feature.properties['stop_id']],
+    } : {
         id: 'selected place',
         type: 'symbol',
-        source: 'selected place',
+        source: 'vehicles',
         paint: {'icon-color': '#cc0033'},
         layout: {
             'icon-image': 'vehicle',
@@ -75,11 +89,7 @@ function setSelectedPlace(tappedLayerId, feature, reselecting) {
             'icon-size': ['interpolate', ['linear'], ['zoom'], 10, 0.5, 15, 1],
             'icon-allow-overlap': true,
         },
-    } : {
-        id: 'selected place',
-        type: 'fill',
-        source: 'selected place',
-        paint: {'fill-color': '#cc0033'},
+        filter: ['==', ['get', 'vehicle_id'], feature.properties['vehicle_id']],
     }, tappedLayerId);
     // Now move tapped layer below selected place layer
     map.moveLayer(tappedLayerId, 'selected place');
@@ -131,7 +141,6 @@ function setSelectedPlace(tappedLayerId, feature, reselecting) {
                 <h3 class='centerText'>${feature.properties['Lot_Name'].trim()}</h3>
                 ${extraProps}
             </div>`;
-            map.setPaintProperty('selected place', 'fill-opacity', 0.5);
             break;
         }
         case 'stops': {
@@ -202,7 +211,6 @@ map.on('load', () => {
             'line-dasharray': ['get', 'line_dasharray'],
         },
     }, 'Rutgers buildings');
-    map.addSource('selected place', {type: 'geojson', data: {type: 'Feature'}});
     map.addSource('stops', {type: 'geojson', data: {type: 'Feature'}});
     map.addLayer({
         id: 'stops',
@@ -356,10 +364,6 @@ map.on('load', () => {
                         },
                     };
                     curVehicleFeatures.push(curVehicleFeature);
-                    if (selectedLayerId === 'vehicles' && selectedFeature.properties.vehicle_id === newVehicle.vehicle_id) {
-                        selectedFeature = curVehicleFeature; // we reselect this whenever we get new data; this makes it appear at the latest spot
-                        map.getSource('selected place').setData(curVehicleFeature);
-                    }
                 });
                 map.getSource('vehicles').setData({type: 'FeatureCollection', features: curVehicleFeatures});
                 await sleep(20);
