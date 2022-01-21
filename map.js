@@ -194,7 +194,8 @@ map.on('load', () => {
         source: 'routes',
         paint: {
             'line-color': ['get', 'route_color'],
-            'line-width': 3,
+            'line-width': 5,
+            'line-dasharray': ['get', 'line_dasharray'],
         },
     }, 'Rutgers buildings');
     map.addSource('selected place', {type: 'geojson', data: {type: 'Feature'}});
@@ -277,12 +278,14 @@ map.on('load', () => {
 
         vehicles.forEach(vehicle => vehicle.route = routeIdToRouteMap[vehicle.route_id]);
 
+        let dashLength = 1;
         const segmentFeatures = routes
             .filter(route => vehicles.some(vehicle => vehicle.route_id === route.route_id))
             .map(route => ({
                 type: 'Feature',
                 properties: {
                     route_color: '#' + route.color,
+                    line_dasharray: [dashLength, dashLength++],
                 },
                 geometry: {
                     type: 'MultiLineString',
