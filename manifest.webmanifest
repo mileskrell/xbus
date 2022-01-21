@@ -1,0 +1,14 @@
+{
+  "background_color": "white",
+  "display": "standalone",
+  "icons": [
+    {
+      "src": "icon.png",
+      "sizes": "192x192",
+      "type": "image/png"
+    }
+  ],
+  "name": "last-bus",
+  "short_name": "last-bus",
+  "start_url": "/index.html"
+}
