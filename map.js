@@ -198,6 +198,14 @@ function setSelectedPlace(tappedLayerId, feature, reselecting) {
     }
 }
 
+function featureIsSelectedFeature(feature) {
+    return selectedFeature &&
+        (selectedFeature.properties['vehicle_id'] === (feature.properties['vehicle_id'] || 'x')
+            || selectedFeature.properties['stop_id'] === (feature.properties['stop_id'] || 'x')
+            || selectedFeature.properties['BldgNum'] === (feature.properties['BldgNum'] || 'x')
+            || selectedFeature.properties['Parking_ID'] === (feature.properties['Parking_ID'] || 'x'));
+}
+
 map.on('load', () => {
     map.loadImage('stop.png', (error, image) => {
         if (error) throw error;
@@ -256,27 +264,21 @@ map.on('load', () => {
     map.on('mouseenter', 'stops', () => map.getCanvas().style.cursor = 'pointer');
     map.on('mouseenter', 'vehicles', () => map.getCanvas().style.cursor = 'pointer');
     map.on('click', e => {
-        const tappedVehicles = map.queryRenderedFeatures(e.point, {layers: ['vehicles']});
-        if (tappedVehicles.length > 0) {
-            setSelectedPlace('vehicles', tappedVehicles[0]);
-            return;
+        let somethingWasTapped = false;
+        for (const layerID of ['vehicles', 'stops', 'Rutgers buildings', 'Rutgers parking lots']) {
+            const tappedFeaturesInLayer = map.queryRenderedFeatures(e.point, {layers: [layerID]});
+            const featureToSelect = tappedFeaturesInLayer.find(it => !featureIsSelectedFeature(it));
+            if (featureToSelect) {
+                setSelectedPlace(layerID, featureToSelect);
+                return;
+            }
+            if (tappedFeaturesInLayer.length > 0) {
+                somethingWasTapped = true;
+            }
         }
-        const tappedStops = map.queryRenderedFeatures(e.point, {layers: ['stops']});
-        if (tappedStops.length > 0) {
-            setSelectedPlace('stops', tappedStops[0]);
-            return;
+        if (!somethingWasTapped) {
+            setSelectedPlace(); // clear selection
         }
-        const tappedBuildings = map.queryRenderedFeatures(e.point, {layers: ['Rutgers buildings']});
-        if (tappedBuildings.length > 0) {
-            setSelectedPlace('Rutgers buildings', tappedBuildings[0]);
-            return;
-        }
-        const tappedParkingLots = map.queryRenderedFeatures(e.point, {layers: ['Rutgers parking lots']});
-        if (tappedParkingLots.length > 0) {
-            setSelectedPlace('Rutgers parking lots', tappedParkingLots[0]);
-            return;
-        }
-        setSelectedPlace(); // clear selection
     });
 
     async function fetchBusStuff() {
