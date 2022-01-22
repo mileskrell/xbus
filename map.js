@@ -82,14 +82,15 @@ function setSelectedPlace(tappedLayerId, feature, reselecting) {
             );
         }
         if (selectedLayerId === 'vehicles' || tappedLayerId === 'vehicles') {
-            map.setPaintProperty('vehicles',
-                'icon-color',
+            map.setLayoutProperty(
+                'vehicles',
+                'icon-image',
                 tappedLayerId === 'vehicles' ?
                     ['case',
                         ['==', ['get', 'vehicle_id'], feature && feature.properties['vehicle_id'] || 'x'],
-                        '#cc0033',
-                        ['get', 'route_color']
-                    ] : ['get', 'route_color']
+                        'selected-vehicle',
+                        'vehicle'
+                    ] : 'vehicle'
             );
         }
     }
@@ -205,6 +206,10 @@ map.on('load', () => {
     map.loadImage('navigation.png', (error, image) => {
         if (error) throw error;
         return map.addImage('vehicle', image, {sdf: true});
+    });
+    map.loadImage('navigation_with_circle.png', (error, image) => {
+        if (error) throw error;
+        return map.addImage('selected-vehicle', image, {sdf: true});
     });
     map.addSource('routes', {type: 'geojson', data: {type: 'Feature'}});
     map.addLayer({
