@@ -123,7 +123,7 @@ function setSelectedPlace(tappedLayerId, feature, reselecting) {
             html = `<div id="selectedPlaceSheet">
             <h3 class='centerText'>${feature.properties['BldgName']}</h3>
             <div id='buildingPhotoNumberAddress'>
-                <a href=${photoUrl} target='_blank'><img width='100vh' height='100vh' style='margin: 1vh' src=${photoUrl}></a>
+                <img width='100vh' height='100vh' style='margin: 1vh' src=${photoUrl}>
                 <div>
                     <p class='centerText'>Building number: ${buildingNumber}</p>
                     <p class='centerText'>${feature.properties['BldgAddr']}<br>
