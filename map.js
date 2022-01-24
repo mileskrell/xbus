@@ -159,8 +159,8 @@ function setSelectedPlace(tappedLayerId, feature, reselecting) {
                     routeColor: route.color,
                     arrivalEstimates: arrivalEstimates
                         .filter(it => it.route_id === route.route_id)
-                        // .slice(0, 3) // only show next 3 arrivals per route
                         .sort((a, b) => a.arrival_at > b.arrival_at ? 1 : -1)
+                        .slice(0, 3)
                         .map(it => secondsToString((new Date(it.arrival_at) - Date.now()) / 1000)),
                 }))
                 .sort((a, b) => a.routeName > b.routeName ? 1 : -1)
