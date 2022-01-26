@@ -43,44 +43,45 @@ function setSelectedPlace(tappedLayerId, feature, reselecting) {
         selectedPlaceSheet = undefined;
     }
 
-    if (!reselecting) { // perf: don't update properties if selection hasn't changed
-        if (selectedLayerId === 'Rutgers buildings' || tappedLayerId === 'Rutgers buildings') { // perf: don't update if this layer hasn't been (un-)selected
-            map.setPaintProperty(
-                'Rutgers buildings',
-                'fill-color',
-                tappedLayerId === 'Rutgers buildings' ? // perf: don't evaluate case if this layer isn't selected
-                    ['case',
-                        // in case a building has BldgNum undefined, use 'x' to prevent matching with the undefined BldgNum of non-buildings
-                        ['==', ['get', 'BldgNum'], feature && feature.properties['BldgNum'] || 'x'],
-                        '#cc0033',
-                        '#6e767c'
-                    ] : '#6e767c'
+    if (!reselecting) {
+        // unselect any old feature
+        if (selectedLayerId === 'Rutgers buildings') {
+            map.setFeatureState(
+                {source: 'composite', sourceLayer: buildingsSourceLayerName, id: selectedFeature.id},
+                {selected: false}
+            );
+        } else if (selectedLayerId === 'Rutgers parking lots') {
+            map.setFeatureState(
+                {source: 'composite', sourceLayer: parkingLotsSourceLayerName, id: selectedFeature.id},
+                {selected: false}
+            );
+        } else if (selectedLayerId === 'stops') {
+            map.setFeatureState(
+                {source: 'stops', id: selectedFeature.id},
+                {selected: false}
             );
         }
-        if (selectedLayerId === 'Rutgers parking lots' || tappedLayerId === 'Rutgers parking lots') {
-            map.setPaintProperty(
-                'Rutgers parking lots',
-                'fill-color',
-                tappedLayerId === 'Rutgers parking lots' ?
-                    ['case',
-                        ['==', ['get', 'Parking_ID'], feature && feature.properties['Parking_ID'] || 'x'],
-                        '#cc0033',
-                        '#878787'
-                    ] : '#878787'
-            );
+        if (feature) {
+            // select new feature
+            if (tappedLayerId === 'Rutgers buildings') {
+                map.setFeatureState(
+                    {source: 'composite', sourceLayer: buildingsSourceLayerName, id: feature.id},
+                    {selected: true}
+                );
+            } else if (tappedLayerId === 'Rutgers parking lots') {
+                map.setFeatureState(
+                    {source: 'composite', sourceLayer: parkingLotsSourceLayerName, id: feature.id},
+                    {selected: true}
+                );
+            } else if (tappedLayerId === 'stops') {
+                map.setFeatureState(
+                    {source: 'stops', id: feature.id},
+                    {selected: true}
+                );
+            }
         }
-        if (selectedLayerId === 'stops' || tappedLayerId === 'stops') {
-            map.setPaintProperty(
-                'stops',
-                'icon-color',
-                tappedLayerId === 'stops' ?
-                    ['case',
-                        ['==', ['get', 'stop_id'], feature && feature.properties['stop_id'] || 'x'],
-                        '#cc0033',
-                        '#000000'
-                    ] : '#000000'
-            );
-        }
+        // We can't use feature state for layout properties (i.e. icon-image), so instead we do this to unselect+select vehicles.
+        // Visible lag compared to feature state updates :(
         if (selectedLayerId === 'vehicles' || tappedLayerId === 'vehicles') {
             map.setLayoutProperty(
                 'vehicles',
@@ -93,12 +94,11 @@ function setSelectedPlace(tappedLayerId, feature, reselecting) {
                     ] : 'vehicle'
             );
         }
-    }
-
-    selectedLayerId = tappedLayerId;
-    selectedFeature = feature;
-    if (!tappedLayerId) {
-        return;
+        selectedLayerId = tappedLayerId;
+        selectedFeature = feature;
+        if (!tappedLayerId) {
+            return;
+        }
     }
 
     let html;
@@ -219,6 +219,24 @@ map.on('load', () => {
         if (error) throw error;
         return map.addImage('selected-vehicle', image, {sdf: true});
     });
+    map.setPaintProperty(
+        'Rutgers buildings',
+        'fill-color',
+        ['case',
+            ['boolean', ['feature-state', 'selected'], false],
+            '#cc0033',
+            '#6e767c'
+        ]
+    );
+    map.setPaintProperty(
+        'Rutgers parking lots',
+        'fill-color',
+        ['case',
+            ['boolean', ['feature-state', 'selected'], false],
+            '#cc0033',
+            '#878787'
+        ]
+    );
     map.addSource('routes', {type: 'geojson', data: {type: 'Feature'}});
     map.addLayer({
         id: 'routes',
@@ -235,7 +253,13 @@ map.on('load', () => {
         id: 'stops',
         type: 'symbol',
         source: 'stops',
-        paint: {'icon-color': '#000000'},
+        paint: {
+            'icon-color': ['case',
+                ['boolean', ['feature-state', 'selected'], false],
+                '#cc0033',
+                '#000000'
+            ],
+        },
         layout: {
             'icon-image': 'stop',
             'icon-size': ['interpolate', ['linear'], ['zoom'], 12, 0.25, 18, 1],
@@ -326,6 +350,7 @@ map.on('load', () => {
         map.getSource('routes').setData({type: 'FeatureCollection', features: segmentFeatures})
 
         const stopFeatures = stops.map(stop => ({
+            id: stop.stop_id,
             type: 'Feature',
             geometry: {
                 type: 'Point',
