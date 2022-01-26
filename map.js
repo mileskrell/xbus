@@ -6,7 +6,8 @@ switch (document.cookie.substring(7)) {
 }
 let routes, segments, stops, vehicles,
     routeIdToRouteMap, stopIdToStopMap, vehicleIdToVehicleMap, oldVehicleIdToVehicleMap,
-    selectedLayerId, selectedFeature, selectedPlaceSheet;
+    selectedLayerId, selectedFeature, selectedPlaceSheet,
+    buildingsGeoJSON, parkingLotsGeoJSON, stopsGeoJSON;
 const map = new mapboxgl.Map({
     container: 'map', // container ID
     style: 'mapbox://styles/mileskrell/ckxl9zz5632ey14oafkathv0c', // style URL
@@ -33,8 +34,20 @@ map.addControl(
     })
 );
 
-// Add controls to fly to NB/NWK/CMDN
-map.addControl(new FlyToCampusControl());
+function onSearchClick(layerID, featureID) {
+    const geoJsonToSearch = layerID === 'Rutgers buildings' ? buildingsGeoJSON
+        : layerID === 'Rutgers parking lots' ? parkingLotsGeoJSON
+            : stopsGeoJSON;
+    const feature = geoJsonToSearch.features.find(it => it.id === featureID)
+    if (!feature) {
+        alert(`Ran into an error finding that place, sorry!`);
+        return;
+    }
+    const lng = layerID === 'stops' ? feature.geometry.coordinates[0] : feature.properties['Longitude'];
+    const lat = layerID === 'stops' ? feature.geometry.coordinates[1] : feature.properties['Latitude'];
+    map.flyTo({zoom: 16, center: [lng, lat]});
+    setSelectedPlace(layerID, feature);
+}
 
 function setSelectedPlace(tappedLayerId, feature, reselecting) {
     const oldSheetScrollTop = selectedPlaceSheet ? selectedPlaceSheet.scrollTop : 0; // save old sheet scroll position
@@ -129,7 +142,9 @@ function setSelectedPlace(tappedLayerId, feature, reselecting) {
             break;
         }
         case 'stops': {
-            const arrivalEstimates = JSON.parse(selectedFeature.properties.arrival_estimates);
+            const arrivalEstimates = typeof selectedFeature.properties.arrival_estimates === 'string'
+                ? JSON.parse(selectedFeature.properties.arrival_estimates)
+                : selectedFeature.properties.arrival_estimates;
 
             const arrivals = routes.filter(route => arrivalEstimates.some(it => it.route_id === route.route_id))
                 .map(route => ({
@@ -176,14 +191,6 @@ function setSelectedPlace(tappedLayerId, feature, reselecting) {
     }
 }
 
-function featureIsSelectedFeature(feature) {
-    return selectedFeature &&
-        (selectedFeature.properties['vehicle_id'] === (feature.properties['vehicle_id'] || 'x')
-            || selectedFeature.properties['stop_id'] === (feature.properties['stop_id'] || 'x')
-            || selectedFeature.properties['BldgNum'] === (feature.properties['BldgNum'] || 'x')
-            || selectedFeature.properties['Parking_ID'] === (feature.properties['Parking_ID'] || 'x'));
-}
-
 map.on('load', async () => {
     map.loadImage('stop.png', (error, image) => {
         if (error) throw error;
@@ -197,10 +204,18 @@ map.on('load', async () => {
         if (error) throw error;
         return map.addImage('selected-vehicle', image, {sdf: true});
     });
-    const buildingsGeoJSON = await (await fetch('Rutgers buildings.geojson')).json();
-    const parkingLotsGeoJSON = await (await fetch('Rutgers parking lots.geojson')).json();
-    map.addSource('Rutgers buildings', {type: 'geojson', data: buildingsGeoJSON, promoteId: 'BldgNum'});
-    map.addSource('Rutgers parking lots', {type: 'geojson', data: parkingLotsGeoJSON, promoteId: 'Parking_ID'});
+    buildingsGeoJSON = await (await fetch('Rutgers buildings.geojson')).json();
+    buildingsGeoJSON.features.forEach(it => it.id = it.properties['BldgNum']);
+    parkingLotsGeoJSON = await (await fetch('Rutgers parking lots.geojson')).json();
+    parkingLotsGeoJSON.features.forEach(it => it.id = it.properties['Parking_ID']);
+    map.addSource('Rutgers buildings', {type: 'geojson', data: buildingsGeoJSON});
+    map.addSource('Rutgers parking lots', {type: 'geojson', data: parkingLotsGeoJSON});
+
+    // Add building/parking lot/stop search box
+    map.addControl(new SearchControl(onSearchClick, buildingsGeoJSON, parkingLotsGeoJSON), 'top-left');
+
+    // Add controls to fly to NB/NWK/CMDN
+    map.addControl(new FlyToCampusControl());
 
     map.addLayer({
         id: 'Rutgers buildings',
@@ -281,7 +296,7 @@ map.on('load', async () => {
         let somethingWasTapped = false;
         for (const layerID of ['vehicles', 'stops', 'Rutgers buildings', 'Rutgers parking lots']) {
             const tappedFeaturesInLayer = map.queryRenderedFeatures(e.point, {layers: [layerID]});
-            const featureToSelect = tappedFeaturesInLayer.find(it => !featureIsSelectedFeature(it));
+            const featureToSelect = tappedFeaturesInLayer.find(it => !selectedFeature || selectedFeature.id !== it.id);
             if (featureToSelect) {
                 setSelectedPlace(layerID, featureToSelect);
                 return;
@@ -355,10 +370,12 @@ map.on('load', async () => {
                     .map(it => ({route_id: it.route_id, arrival_at: it.arrival_at}))
             },
         }));
-        map.getSource('stops').setData({type: 'FeatureCollection', features: stopFeatures});
+        stopsGeoJSON = {type: 'FeatureCollection', features: stopFeatures};
+        map.getSource('stops').setData(stopsGeoJSON);
 
         if (!oldVehicleIdToVehicleMap) {
             const vehicleFeatures = vehicles.map(vehicle => ({
+                id: vehicle.vehicle_id,
                 type: 'Feature',
                 geometry: {
                     type: 'Point',
@@ -385,6 +402,7 @@ map.on('load', async () => {
                     const headingDiff = newVehicle.heading - oldVehicle.heading;
                     const curHeading = oldVehicle.heading + counter / steps * headingDiff;
                     const curVehicleFeature = {
+                        id: newVehicle.vehicle_id,
                         type: 'Feature',
                         geometry: {
                             type: 'Point',
