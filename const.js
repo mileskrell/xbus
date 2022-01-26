@@ -65,5 +65,7 @@ const translocRequestInit = {
         'x-rapidapi-key': '1b6e9ed24cmsh2d1311786670ae8p1eace0jsncef54644775d',
     },
 };
+const buildingsLayerId = 'Rutgers buildings';
+const parkingLotsLayerId = 'Rutgers parking lots';
 const buildingsSourceLayerName = 'buildings_w_kta_props_2022-01-25';
 const parkingLotsSourceLayerName = 'parking_2022-01-25';
