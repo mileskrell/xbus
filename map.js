@@ -48,10 +48,10 @@ class SearchControl {
                         .sort((a, b) => a.display > b.display ? 1 : -1)
                     : [];
                 this.options = this.stops.concat(this.buildings).concat(this.lots);
-                dataList.innerHTML = this.options.map(it => `<option value='${it.featureID}'>${it.display}</option>`).join('');
+                dataList.innerHTML = this.options.map(it => `<option>${it.display}</option>`).join('');
             }
             // check if text matches an entry
-            const matchingItem = this.options.find(it => `${it.featureID}` === e.target.value);
+            const matchingItem = this.options.find(it => `${it.display}` === e.target.value);
             if (matchingItem) {
                 onSearchClick(matchingItem.layerID, matchingItem.featureID);
                 e.target.value = matchingItem.display;
