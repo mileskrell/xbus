@@ -44,41 +44,19 @@ function setSelectedPlace(tappedLayerId, feature, reselecting) {
     }
 
     if (!reselecting) {
-        // unselect any old feature
-        if (selectedLayerId === buildingsLayerId) {
+        if (selectedLayerId && selectedLayerId !== 'vehicles') {
+            // unselect old feature
             map.setFeatureState(
-                {source: 'composite', sourceLayer: buildingsSourceLayerName, id: selectedFeature.id},
-                {selected: false}
-            );
-        } else if (selectedLayerId === parkingLotsLayerId) {
-            map.setFeatureState(
-                {source: 'composite', sourceLayer: parkingLotsSourceLayerName, id: selectedFeature.id},
-                {selected: false}
-            );
-        } else if (selectedLayerId === 'stops') {
-            map.setFeatureState(
-                {source: 'stops', id: selectedFeature.id},
+                {source: selectedLayerId, id: selectedFeature.id},
                 {selected: false}
             );
         }
-        if (feature) {
+        if (tappedLayerId && tappedLayerId !== 'vehicles') {
             // select new feature
-            if (tappedLayerId === buildingsLayerId) {
-                map.setFeatureState(
-                    {source: 'composite', sourceLayer: buildingsSourceLayerName, id: feature.id},
-                    {selected: true}
-                );
-            } else if (tappedLayerId === parkingLotsLayerId) {
-                map.setFeatureState(
-                    {source: 'composite', sourceLayer: parkingLotsSourceLayerName, id: feature.id},
-                    {selected: true}
-                );
-            } else if (tappedLayerId === 'stops') {
-                map.setFeatureState(
-                    {source: 'stops', id: feature.id},
-                    {selected: true}
-                );
-            }
+            map.setFeatureState(
+                {source: tappedLayerId, id: feature.id},
+                {selected: true}
+            );
         }
         // We can't use feature state for layout properties (i.e. icon-image), so instead we do this to unselect+select vehicles.
         // Visible lag compared to feature state updates :(
@@ -103,7 +81,7 @@ function setSelectedPlace(tappedLayerId, feature, reselecting) {
 
     let html;
     switch (tappedLayerId) {
-        case buildingsLayerId: {
+        case 'Rutgers buildings': {
             const buildingNumber = feature.properties['BldgNum'];
             const photoUrl = `https://storage.googleapis.com/rutgers-campus-map-building-images-prod/${buildingNumber}/00.jpg`;
             let extraInfoHtml = '';
@@ -134,7 +112,7 @@ function setSelectedPlace(tappedLayerId, feature, reselecting) {
             </div>`;
             break;
         }
-        case parkingLotsLayerId: {
+        case 'Rutgers parking lots': {
             let extraProps = '';
             if (feature.properties['Contact']) {
                 const contact = feature.properties['Contact'].trim();
@@ -206,7 +184,7 @@ function featureIsSelectedFeature(feature) {
             || selectedFeature.properties['Parking_ID'] === (feature.properties['Parking_ID'] || 'x'));
 }
 
-map.on('load', () => {
+map.on('load', async () => {
     map.loadImage('stop.png', (error, image) => {
         if (error) throw error;
         return map.addImage('stop', image, {sdf: true});
@@ -219,24 +197,36 @@ map.on('load', () => {
         if (error) throw error;
         return map.addImage('selected-vehicle', image, {sdf: true});
     });
-    map.setPaintProperty(
-        buildingsLayerId,
-        'fill-color',
-        ['case',
-            ['boolean', ['feature-state', 'selected'], false],
-            '#cc0033',
-            '#6e767c'
-        ]
-    );
-    map.setPaintProperty(
-        parkingLotsLayerId,
-        'fill-color',
-        ['case',
-            ['boolean', ['feature-state', 'selected'], false],
-            '#cc0033',
-            '#878787'
-        ]
-    );
+    const buildingsGeoJSON = await (await fetch('Rutgers buildings.geojson')).json();
+    const parkingLotsGeoJSON = await (await fetch('Rutgers parking lots.geojson')).json();
+    map.addSource('Rutgers buildings', {type: 'geojson', data: buildingsGeoJSON, promoteId: 'BldgNum'});
+    map.addSource('Rutgers parking lots', {type: 'geojson', data: parkingLotsGeoJSON, promoteId: 'Parking_ID'});
+
+    map.addLayer({
+        id: 'Rutgers buildings',
+        type: 'fill',
+        source: 'Rutgers buildings',
+        paint: {
+            'fill-color': ['case',
+                ['boolean', ['feature-state', 'selected'], false],
+                '#cc0033',
+                '#6e767c'
+            ],
+        },
+    }, 'admin-1-boundary-bg');
+    map.addLayer({
+        id: 'Rutgers parking lots',
+        type: 'fill',
+        source: 'Rutgers parking lots',
+        paint: {
+            'fill-color': ['case',
+                ['boolean', ['feature-state', 'selected'], false],
+                '#cc0033',
+                '#878787'
+            ],
+            'fill-opacity': 0.5,
+        },
+    }, 'Camden walkways');
     map.addSource('routes', {type: 'geojson', data: {type: 'Feature'}});
     map.addLayer({
         id: 'routes',
@@ -247,7 +237,7 @@ map.on('load', () => {
             'line-width': 5,
             'line-dasharray': ['get', 'line_dasharray'],
         },
-    }, buildingsLayerId);
+    }, 'Rutgers buildings');
     map.addSource('stops', {type: 'geojson', data: {type: 'Feature'}});
     map.addLayer({
         id: 'stops',
@@ -279,17 +269,17 @@ map.on('load', () => {
             'icon-allow-overlap': true,
         },
     });
-    map.on('mouseleave', parkingLotsLayerId, () => map.getCanvas().style.cursor = '');
-    map.on('mouseleave', buildingsLayerId, () => map.getCanvas().style.cursor = '');
+    map.on('mouseleave', 'Rutgers parking lots', () => map.getCanvas().style.cursor = '');
+    map.on('mouseleave', 'Rutgers buildings', () => map.getCanvas().style.cursor = '');
     map.on('mouseleave', 'stops', () => map.getCanvas().style.cursor = '');
     map.on('mouseleave', 'vehicles', () => map.getCanvas().style.cursor = '');
-    map.on('mouseenter', parkingLotsLayerId, () => map.getCanvas().style.cursor = 'pointer');
-    map.on('mouseenter', buildingsLayerId, () => map.getCanvas().style.cursor = 'pointer');
+    map.on('mouseenter', 'Rutgers parking lots', () => map.getCanvas().style.cursor = 'pointer');
+    map.on('mouseenter', 'Rutgers buildings', () => map.getCanvas().style.cursor = 'pointer');
     map.on('mouseenter', 'stops', () => map.getCanvas().style.cursor = 'pointer');
     map.on('mouseenter', 'vehicles', () => map.getCanvas().style.cursor = 'pointer');
     map.on('click', e => {
         let somethingWasTapped = false;
-        for (const layerID of ['vehicles', 'stops', buildingsLayerId, parkingLotsLayerId]) {
+        for (const layerID of ['vehicles', 'stops', 'Rutgers buildings', 'Rutgers parking lots']) {
             const tappedFeaturesInLayer = map.queryRenderedFeatures(e.point, {layers: [layerID]});
             const featureToSelect = tappedFeaturesInLayer.find(it => !featureIsSelectedFeature(it));
             if (featureToSelect) {
