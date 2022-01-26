@@ -8,6 +8,67 @@ let routes, segments, stops, vehicles,
     routeIdToRouteMap, stopIdToStopMap, vehicleIdToVehicleMap, oldVehicleIdToVehicleMap,
     selectedLayerId, selectedFeature, selectedPlaceSheet,
     buildingsGeoJSON, parkingLotsGeoJSON, stopsGeoJSON;
+
+class SearchControl {
+    constructor() {
+        this.buildings = buildingsGeoJSON.features
+            .map(it => ({
+                layerID: 'Rutgers buildings',
+                featureID: it.id,
+                display: `🏢 ${it.properties['BldgName']}`,
+            }))
+            .sort((a, b) => a.display > b.display ? 1 : -1);
+        this.lots = parkingLotsGeoJSON.features
+            .map(it => ({
+                layerID: 'Rutgers parking lots',
+                featureID: it.id,
+                display: `🅿️ ${it.properties['Lot_Name']}`,
+            }))
+            .sort((a, b) => a.display > b.display ? 1 : -1);
+        this.stops = [];
+    }
+
+    onAdd(map) {
+        this._container = document.createElement('div');
+        this._container.classList.add('mapboxgl-ctrl');
+
+        const input = domCreate('input', undefined, this._container);
+        input.type = 'search';
+        input.placeholder = 'Search for a stop/building/lot';
+
+        const dataList = domCreate('datalist', undefined, this._container);
+        dataList.id = 'search_items';
+        input.setAttribute('list', 'search_items');
+
+        input.addEventListener('input', e => {
+            if (this.stops.length === 0) {
+                this.stops = stopsGeoJSON
+                    ? stopsGeoJSON.features
+                        .map(it => ({layerID: 'stops', featureID: it.id, display: `🚏 ${it.properties['stop_name']}`}))
+                        .sort((a, b) => a.display > b.display ? 1 : -1)
+                    : [];
+                this.options = this.stops.concat(this.buildings).concat(this.lots);
+                dataList.innerHTML = this.options.map(it => `<option value='${it.featureID}'>${it.display}</option>`).join('');
+            }
+            // check if text matches an entry
+            const matchingItem = this.options.find(it => `${it.featureID}` === e.target.value);
+            if (matchingItem) {
+                onSearchClick(matchingItem.layerID, matchingItem.featureID);
+                e.target.value = matchingItem.display;
+            }
+        });
+
+        return this._container;
+    }
+
+    onRemove() {
+        this._container.parentNode.removeChild(this._container);
+        this.buildings = undefined;
+        this.lots = undefined;
+        this.stops = undefined;
+    }
+}
+
 const map = new mapboxgl.Map({
     container: 'map', // container ID
     style: 'mapbox://styles/mileskrell/ckxl9zz5632ey14oafkathv0c', // style URL
@@ -212,7 +273,7 @@ map.on('load', async () => {
     map.addSource('Rutgers parking lots', {type: 'geojson', data: parkingLotsGeoJSON});
 
     // Add building/parking lot/stop search box
-    map.addControl(new SearchControl(onSearchClick, buildingsGeoJSON, parkingLotsGeoJSON), 'top-left');
+    map.addControl(new SearchControl(), 'top-left');
 
     // Add controls to fly to NB/NWK/CMDN
     map.addControl(new FlyToCampusControl());
