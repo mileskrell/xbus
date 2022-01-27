@@ -47,7 +47,7 @@ class FlyToCampusControl {
         button.type = 'button';
         button.textContent = buttonText;
         button.addEventListener('click', () => {
-            document.cookie = `campus=${buttonText}; expires=${new Date(Date.now() + 1000 * 60 * 60 * 24 * 365)}; path=/`;
+            document.cookie = `campus=${buttonText}; SameSite=Strict; expires=${new Date(Date.now() + 1000 * 60 * 60 * 24 * 365)}; path=/`;
             this._map.flyTo(flyToOptions);
         });
         return button;
