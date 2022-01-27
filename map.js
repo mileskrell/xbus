@@ -383,12 +383,7 @@ map.on('load', async () => {
             setTimeout(fetchBusStuff, 5000);
             return;
         }
-        if (vehicles) {
-            vehicles = vehicles[1323];
-        } else {
-            console.warn("no vehicles"); // TODO: Confirm that this is what happens when there are no vehicles
-            vehicles = [];
-        }
+        vehicles = vehicles[1323] || []; // undefined when there are no vehicles
         console.log("fetched routes, stops, and vehicles");
 
         routeIdToRouteMap = {};
