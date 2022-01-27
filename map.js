@@ -265,9 +265,9 @@ map.on('load', async () => {
         if (error) throw error;
         return map.addImage('selected-vehicle', image, {sdf: true});
     });
-    buildingsGeoJSON = await (await fetch('Rutgers buildings.geojson')).json();
+    buildingsGeoJSON = await (await fetch('geojson/Rutgers buildings.geojson')).json();
     buildingsGeoJSON.features.forEach(it => it.id = it.properties['BldgNum']);
-    parkingLotsGeoJSON = await (await fetch('Rutgers parking lots.geojson')).json();
+    parkingLotsGeoJSON = await (await fetch('geojson/Rutgers parking lots.geojson')).json();
     parkingLotsGeoJSON.features.forEach(it => it.id = it.properties['Parking_ID']);
     map.addSource('Rutgers buildings', {type: 'geojson', data: buildingsGeoJSON});
     map.addSource('Rutgers parking lots', {type: 'geojson', data: parkingLotsGeoJSON});
