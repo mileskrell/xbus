@@ -253,15 +253,15 @@ function setSelectedPlace(tappedLayerId, feature, reselecting) {
 }
 
 map.on('load', async () => {
-    map.loadImage('stop.png', (error, image) => {
+    map.loadImage('images/stop.png', (error, image) => {
         if (error) throw error;
         return map.addImage('stop', image, {sdf: true});
     });
-    map.loadImage('navigation.png', (error, image) => {
+    map.loadImage('images/navigation.png', (error, image) => {
         if (error) throw error;
         return map.addImage('vehicle', image, {sdf: true});
     });
-    map.loadImage('navigation_with_circle.png', (error, image) => {
+    map.loadImage('images/navigation_with_circle.png', (error, image) => {
         if (error) throw error;
         return map.addImage('selected-vehicle', image, {sdf: true});
     });
