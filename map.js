@@ -384,7 +384,6 @@ map.on('load', async () => {
             return;
         }
         vehicles = vehicles[1323] || []; // undefined when there are no vehicles
-        console.log("fetched routes, stops, and vehicles");
 
         routeIdToRouteMap = {};
         routes.forEach(route => routeIdToRouteMap[route.route_id] = route);
