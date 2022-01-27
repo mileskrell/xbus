@@ -48,7 +48,9 @@ class SearchControl {
                         .sort((a, b) => a.display > b.display ? 1 : -1)
                     : [];
                 this.options = this.stops.concat(this.buildings).concat(this.lots);
+                dataList.id = 'temp'; // avoids chromium bug https://stackoverflow.com/a/45118516/5374261
                 dataList.innerHTML = this.options.map(it => `<option>${it.display}</option>`).join('');
+                dataList.id = 'search_items';
             }
             // check if text matches an entry
             const matchingItem = this.options.find(it => `${it.display}` === e.target.value);
