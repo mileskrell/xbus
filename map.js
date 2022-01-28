@@ -34,7 +34,7 @@ class SearchControl {
 
         const input = domCreate('input', undefined, this._container);
         input.type = 'search';
-        input.placeholder = 'Search for a stop/building/lot';
+        input.placeholder = 'stop/building/lot';
 
         const dataList = domCreate('datalist', undefined, this._container);
         dataList.id = 'search_items';
