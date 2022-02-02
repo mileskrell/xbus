@@ -35,6 +35,7 @@ class SearchControl {
         const input = domCreate('input', undefined, this._container);
         input.type = 'search';
         input.placeholder = 'stop/building/lot';
+        input.setAttribute('onfocus', 'this.value=""');
 
         const dataList = domCreate('datalist', undefined, this._container);
         dataList.id = 'search_items';
@@ -110,6 +111,7 @@ function onSearchClick(layerID, featureID) {
     const lat = layerID === 'stops' ? feature.geometry.coordinates[1] : feature.properties['Latitude'];
     map.flyTo({zoom: 16, center: [lng, lat]});
     setSelectedPlace(layerID, feature);
+    document.getElementsByClassName('mapboxgl-canvas')[0].focus();
 }
 
 function setSelectedPlace(tappedLayerId, feature, reselecting) {
