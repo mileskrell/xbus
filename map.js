@@ -229,9 +229,9 @@ function setSelectedPlace(tappedLayerId, feature, reselecting) {
             break;
         }
         case 'vehicles': {
-            const route = vehicleIdToVehicleMap[feature.properties['vehicle_id']].route;
-            const routeName = route.short_name ? route.short_name : route.long_name;
-            const arrivalEstimates = vehicleIdToVehicleMap[selectedFeature.properties.vehicle_id].arrival_estimates
+            const vehicle = vehicleIdToVehicleMap[selectedFeature.properties.vehicle_id];
+            const routeName = vehicle.route.short_name ? vehicle.route.short_name : vehicle.route.long_name;
+            const arrivalEstimates = vehicle.arrival_estimates
                 .sort((a, b) => a.arrival_at > b.arrival_at ? 1 : -1)
                 .map(it => ({
                     stopName: stopIdToStopMap[it.stop_id].name,
@@ -239,7 +239,7 @@ function setSelectedPlace(tappedLayerId, feature, reselecting) {
                 }))
                 .map(it => `<div class="sheetListEntry"><b>${it.stopName}</b><div style="flex-shrink: 0">${it.arrivingIn}</div></div>`);
             html = `<div id="selectedPlaceSheet">
-                <h3 class="centerText">${routeName}</h3>
+                <h3 class="centerText">${routeName} - bus #${vehicle.vehicle_id}</h3>
                 ${arrivalEstimates.length > 0 ? arrivalEstimates.join('<br>') : '<div class="centerText">No pending arrivals</div>'}
             </div>`;
             break;
