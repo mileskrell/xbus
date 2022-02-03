@@ -174,7 +174,7 @@ function setSelectedPlace(tappedLayerId, feature, reselecting) {
             }
             if (feature.properties['departments']) {
                 const departments = JSON.parse(feature.properties['departments']);
-                extraInfoHtml += '<p><b>Departments:</b><ul>' + departments.map(it => `<li>${it}</li>`).join('') + '</ul></p>';
+                extraInfoHtml += '<b>Departments:</b><ul>' + departments.map(it => `<li>${it}</li>`).join('') + '</ul>';
             }
             html = `<div class="selectedPlaceSheet buildingOrLotSheet">
             <h3 class='centerText'>${feature.properties['BldgName']}</h3>
