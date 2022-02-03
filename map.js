@@ -164,13 +164,13 @@ function setSelectedPlace(tappedLayerId, feature, reselecting) {
             const photoUrl = `https://storage.googleapis.com/rutgers-campus-map-building-images-prod/${buildingNumber}/00.jpg`;
             let extraInfoHtml = '';
             if (feature.properties['AlertLinks']) {
-                extraInfoHtml += `<p><b>Alert:</b> ${feature.properties['AlertLinks']}</p>`;
+                extraInfoHtml += `<p class="centerText"><b>Alert:</b><br>${feature.properties['AlertLinks']}</p>`;
             }
             if (feature.properties['Description']) {
-                extraInfoHtml += `<p>${feature.properties['Description']}</p>`;
+                extraInfoHtml += `<p class="centerText">${feature.properties['Description']}</p>`;
             }
             if (feature.properties['Website']) {
-                extraInfoHtml += `<p class="centerText"><b>Website:</b> <a href='${feature.properties['Website']}' target='_blank'>${feature.properties['Website']}</a></p>`;
+                extraInfoHtml += `<p class="centerText"><b>Website:</b><br><a href='${feature.properties['Website']}' target='_blank'>${feature.properties['Website']}</a></p>`;
             }
             if (feature.properties['departments']) {
                 const departments = JSON.parse(feature.properties['departments']);
@@ -194,11 +194,11 @@ function setSelectedPlace(tappedLayerId, feature, reselecting) {
             let extraProps = '';
             if (feature.properties['Contact']) {
                 const contact = feature.properties['Contact'].trim();
-                extraProps += `<p><b>Contact number:</b> <a href='tel:${contact}'>${contact}</a></p>`;
+                extraProps += `<p class="centerText"><b>Contact number:</b><br><a href='tel:${contact}'>${contact}</a></p>`;
             }
             if (feature.properties['Website']) {
                 const website = feature.properties['Website'].trim();
-                extraProps += `<p><b>Website:</b> <a href='${website}'>${website}</a></p>`;
+                extraProps += `<p class="centerText"><b>Website:</b><br><a href='${website}'>${website}</a></p>`;
             }
             html = `<div class="selectedPlaceSheet buildingOrLotSheet">
                 <h3 class='centerText'>${feature.properties['Lot_Name'].trim()}</h3>
