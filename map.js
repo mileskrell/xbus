@@ -226,7 +226,7 @@ function setSelectedPlace(tappedLayerId, feature, reselecting) {
 
             html = `<div id="selectedPlaceSheet">
                 <h3 class="centerText">${feature.properties['stop_name']}</h3>
-                ${arrivals.length > 0 ? arrivals.join('<hr>') : '<div class="centerText">No pending arrivals</div>'}
+                ${arrivals.length > 0 ? '<div style="text-align: right">' + arrivals.join('<hr>') + '</div>' : '<div class="centerText">No pending arrivals</div>'}
             </div>`;
             break;
         }
