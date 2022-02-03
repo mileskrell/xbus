@@ -17,7 +17,7 @@ body {
     font-weight: bold !important;
 }
 
-#selectedPlaceSheet {
+.selectedPlaceSheet {
     position: fixed;
     bottom: 0;
     width: 100vw;
@@ -27,6 +27,13 @@ body {
     padding: 0 5vw 1vh;
     max-height: 40vh;
     overflow: scroll;
+}
+
+.buildingOrLotSheet {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    overflow-wrap: anywhere;
 }
 
 #buildingPhotoNumberAddress {
