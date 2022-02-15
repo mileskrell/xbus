@@ -33,15 +33,10 @@ class SearchControl {
         this._container.classList.add('mapboxgl-ctrl');
 
         const input = domCreate('input', undefined, this._container);
-        input.type = 'search';
-        input.placeholder = 'stop/building/lot';
+        input.placeholder = 'stop/building/parking lot';
         input.setAttribute('onfocus', 'this.value=""');
 
-        const dataList = domCreate('datalist', undefined, this._container);
-        dataList.id = 'search_items';
-        input.setAttribute('list', 'search_items');
-
-        input.addEventListener('input', e => {
+        const updateDropdownResults = () => {
             if (this.stops.length === 0) {
                 this.stops = stopsGeoJSON
                     ? stopsGeoJSON.features
@@ -49,17 +44,22 @@ class SearchControl {
                         .sort((a, b) => a.display > b.display ? 1 : -1)
                     : [];
                 this.options = this.stops.concat(this.buildings).concat(this.lots);
-                dataList.id = 'temp'; // avoids chromium bug https://stackoverflow.com/a/45118516/5374261
-                dataList.innerHTML = this.options.map(it => `<option>${it.display}</option>`).join('');
-                dataList.id = 'search_items';
+                $('input').autocomplete({
+                    source: this.options.map(it => it.display),
+                    select: (event, ui) => {
+                        // check if text matches an entry
+                        const matchingItem = this.options.find(it => `${it.display}` === ui.item.value);
+                        if (matchingItem) { // should always be true
+                            onSearchClick(matchingItem.layerID, matchingItem.featureID);
+                        }
+                    }
+                });
+            } else {
+                input.removeEventListener('input', updateDropdownResults);
             }
-            // check if text matches an entry
-            const matchingItem = this.options.find(it => `${it.display}` === e.target.value);
-            if (matchingItem) {
-                onSearchClick(matchingItem.layerID, matchingItem.featureID);
-                e.target.value = matchingItem.display;
-            }
-        });
+        }
+
+        input.addEventListener('input', updateDropdownResults);
 
         return this._container;
     }

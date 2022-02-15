@@ -50,3 +50,9 @@ body {
 .centerText {
     text-align: center;
 }
+
+.ui-autocomplete.ui-front {
+    max-height: 60vh;
+    max-width: 90vw;
+    overflow-x: hidden; /* scroll extra items; don't show horizontal scrollbar on item mouseover */
+}
