@@ -415,7 +415,7 @@ map.on('load', async () => {
                 geometry: {
                     type: 'MultiLineString',
                     // TODO: Do I need to care about whether a route says it includes a segment "forward" or "backward"?
-                    coordinates: route.segments.map(route => polyline.decode(segments[route[0]]).map(latLng => [latLng[1], latLng[0]])),
+                    coordinates: route.segments.map(route => polyline.decode(segments[route[0]] || '').map(latLng => [latLng[1], latLng[0]])),
                 },
             }));
         map.getSource('routes').setData({type: 'FeatureCollection', features: segmentFeatures})
