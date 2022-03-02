@@ -183,7 +183,7 @@ function setSelectedPlace(tappedLayerId, feature, reselecting) {
                 <ul>${departments.map(it => `<li>${it}</li>`).join('')}</ul>
                 </div>`;
             }
-            html = `<div class="selectedPlaceSheet">
+            html = `<div id="selectedPlaceSheet">
             <h3 class='centerText'>${feature.properties['BldgName']}</h3>
             <div id='buildingPhotoNumberAddress'>
                 <img width='100vh' height='100vh' style='margin: 1vh' src=${photoUrl}>
@@ -207,7 +207,7 @@ function setSelectedPlace(tappedLayerId, feature, reselecting) {
                 const website = feature.properties['Website'].trim();
                 extraProps += `<p class="centerText"><b>Website:</b><br><a href='${website}'>${website}</a></p>`;
             }
-            html = `<div class="selectedPlaceSheet">
+            html = `<div id="selectedPlaceSheet">
                 <h3 class='centerText'>${feature.properties['Lot_Name'].trim()}</h3>
                 ${extraProps}
             </div>`;
@@ -231,7 +231,7 @@ function setSelectedPlace(tappedLayerId, feature, reselecting) {
                 .sort((a, b) => a.routeName > b.routeName ? 1 : -1)
                 .map(route => `<div class="sheetListEntry"><b style="color: #${route.routeColor}">${route.routeName}</b>` + route.arrivalEstimates.join('<br>') + `</div>`);
 
-            html = `<div class="selectedPlaceSheet">
+            html = `<div id="selectedPlaceSheet">
                 <h3 class="centerText">${feature.properties['stop_name']}</h3>
                 ${arrivals.length > 0 ? '<div style="text-align: right">' + arrivals.join('<hr>') + '</div>' : '<div class="centerText">No pending arrivals</div>'}
             </div>`;
@@ -247,7 +247,7 @@ function setSelectedPlace(tappedLayerId, feature, reselecting) {
                     arrivingIn: secondsToString((new Date(it.arrival_at) - Date.now()) / 1000),
                 }))
                 .map(it => `<div class="sheetListEntry"><b>${it.stopName}</b><div style="flex-shrink: 0">${it.arrivingIn}</div></div>`);
-            html = `<div class="selectedPlaceSheet">
+            html = `<div id="selectedPlaceSheet">
                 <h3 class="centerText">${routeName} - bus #${vehicle.vehicle_id}</h3>
                 ${arrivalEstimates.length > 0 ? arrivalEstimates.join('<br>') : '<div class="centerText">No pending arrivals</div>'}
             </div>`;

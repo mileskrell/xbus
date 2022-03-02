@@ -17,7 +17,7 @@ body {
     font-weight: bold !important;
 }
 
-.selectedPlaceSheet {
+#selectedPlaceSheet {
     position: fixed;
     bottom: 0;
     width: 100vw;
