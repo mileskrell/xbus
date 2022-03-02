@@ -38,7 +38,7 @@ class SearchControl {
 
         const input = domCreate('input', undefined, this._container);
         input.placeholder = 'Bus stop/building/parking lot';
-        input.setAttribute('onfocus', 'this.value=""');
+        input.setAttribute('onfocus', 'this.select()');
 
         const updateDropdownResults = () => {
             if (this.stops.length === 0) {
