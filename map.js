@@ -1,8 +1,12 @@
 mapboxgl.accessToken = mapboxKey;
 let startPos = nbPos;
 switch (document.cookie.substring(7)) {
-    case 'NWK': startPos = nwkPos; break;
-    case 'CMDN': startPos = cmdnPos; break;
+    case 'NWK':
+        startPos = nwkPos;
+        break;
+    case 'CMDN':
+        startPos = cmdnPos;
+        break;
 }
 let routes, segments, stops, vehicles,
     routeIdToRouteMap, stopIdToStopMap, vehicleIdToVehicleMap, oldVehicleIdToVehicleMap,
