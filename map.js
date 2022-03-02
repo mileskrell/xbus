@@ -488,7 +488,9 @@ map.on('load', async () => {
         }
         oldVehicleIdToVehicleMap = vehicleIdToVehicleMap;
 
-        setSelectedPlace(selectedLayerId, selectedFeature, true); // update "selected place" sheet
+        if (selectedLayerId === 'stops' || selectedLayerId === 'vehicles') {
+            setSelectedPlace(selectedLayerId, selectedFeature, true); // update "selected place" sheet
+        }
 
         setTimeout(fetchBusStuff, 5000);
     }
