@@ -59,6 +59,7 @@ const xMin = -75.56;
 const yMin = 38.92;
 const xMax = -73.89;
 const yMax = 41.36;
+const mapboxKey = 'pk.eyJ1IjoibWlsZXNrcmVsbCIsImEiOiJja3hqNXlmY2gzazEyMnRxaDA1Y3J2MjJzIn0.Uz5PQwiiTDyv3fr8YTTwpA';
 const translocRequestInit = {
     method: 'GET',
     headers: {

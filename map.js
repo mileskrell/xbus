@@ -1,4 +1,4 @@
-mapboxgl.accessToken = 'pk.eyJ1IjoibWlsZXNrcmVsbCIsImEiOiJja3hqNXlmY2gzazEyMnRxaDA1Y3J2MjJzIn0.Uz5PQwiiTDyv3fr8YTTwpA';
+mapboxgl.accessToken = mapboxKey;
 let startPos = nbPos;
 switch (document.cookie.substring(7)) {
     case 'NWK': startPos = nwkPos; break;
