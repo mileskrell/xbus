@@ -220,7 +220,7 @@ function setSelectedPlace(tappedLayerId, feature, reselecting) {
 
             const arrivals = routes.filter(route => arrivalEstimates.some(it => it.route_id === route.route_id))
                 .map(route => ({
-                    routeName: route.short_name ? route.short_name : route.long_name,
+                    routeName: route.short_name || route.long_name,
                     routeColor: route.color,
                     arrivalEstimates: arrivalEstimates
                         .filter(it => it.route_id === route.route_id)
@@ -239,7 +239,7 @@ function setSelectedPlace(tappedLayerId, feature, reselecting) {
         }
         case 'vehicles': {
             const vehicle = vehicleIdToVehicleMap[selectedFeature.properties.vehicle_id];
-            const routeName = vehicle.route.short_name ? vehicle.route.short_name : vehicle.route.long_name;
+            const routeName = vehicle.route.short_name || vehicle.route.long_name;
             const arrivalEstimates = vehicle.arrival_estimates
                 .sort((a, b) => a.arrival_at > b.arrival_at ? 1 : -1)
                 .map(it => ({
@@ -460,7 +460,7 @@ map.on('load', async () => {
             for (let counter = 0; counter < steps; counter++) {
                 const curVehicleFeatures = [];
                 vehicles.forEach(newVehicle => {
-                    const oldVehicle = oldVehicleIdToVehicleMap[newVehicle.vehicle_id] ? oldVehicleIdToVehicleMap[newVehicle.vehicle_id] : newVehicle;
+                    const oldVehicle = oldVehicleIdToVehicleMap[newVehicle.vehicle_id] || newVehicle;
                     const latDiff = newVehicle.location.lat - oldVehicle.location.lat;
                     const curLat = oldVehicle.location.lat + counter / steps * latDiff;
                     const lngDiff = newVehicle.location.lng - oldVehicle.location.lng;
