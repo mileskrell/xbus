@@ -33,7 +33,7 @@ body {
     display: flex;
     flex-direction: column;
     align-items: center;
-    overflow-wrap: anywhere;
+    overflow-wrap: break-word;
 }
 
 #buildingPhotoNumberAddress {
