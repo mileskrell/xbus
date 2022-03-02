@@ -8,7 +8,7 @@
       "type": "image/png"
     }
   ],
-  "name": "last-bus",
-  "short_name": "last-bus",
+  "name": "XBus",
+  "short_name": "XBus",
   "start_url": "/index.html"
 }
