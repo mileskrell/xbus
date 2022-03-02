@@ -178,9 +178,12 @@ function setSelectedPlace(tappedLayerId, feature, reselecting) {
             }
             if (feature.properties['departments']) {
                 const departments = JSON.parse(feature.properties['departments']);
-                extraInfoHtml += '<b>Departments:</b><ul>' + departments.map(it => `<li>${it}</li>`).join('') + '</ul>';
+                extraInfoHtml += `<div id="departments">
+                <b>Departments:</b>
+                <ul>${departments.map(it => `<li>${it}</li>`).join('')}</ul>
+                </div>`;
             }
-            html = `<div class="selectedPlaceSheet buildingOrLotSheet">
+            html = `<div class="selectedPlaceSheet">
             <h3 class='centerText'>${feature.properties['BldgName']}</h3>
             <div id='buildingPhotoNumberAddress'>
                 <img width='100vh' height='100vh' style='margin: 1vh' src=${photoUrl}>
@@ -204,7 +207,7 @@ function setSelectedPlace(tappedLayerId, feature, reselecting) {
                 const website = feature.properties['Website'].trim();
                 extraProps += `<p class="centerText"><b>Website:</b><br><a href='${website}'>${website}</a></p>`;
             }
-            html = `<div class="selectedPlaceSheet buildingOrLotSheet">
+            html = `<div class="selectedPlaceSheet">
                 <h3 class='centerText'>${feature.properties['Lot_Name'].trim()}</h3>
                 ${extraProps}
             </div>`;
