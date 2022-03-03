@@ -82,6 +82,7 @@ const map = new mapboxgl.Map({
     ...startPos,
     maxBounds: [[xMin, yMin], [xMax, yMax]], // restrict pan and zoom area
     touchPitch: false, // disable pitch gesture
+    customAttribution: '<a href="https://github.com/mileskrell/xbus" target="_blank">About XBus</a>',
 });
 
 // disable map rotation using right click + drag
