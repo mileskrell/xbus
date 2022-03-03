@@ -1,4 +1,3 @@
-mapboxgl.accessToken = mapboxKey;
 let startPos = nbPos;
 switch (document.cookie.substring(7)) {
     case 'NWK':
@@ -75,33 +74,6 @@ class SearchControl {
         this.stops = undefined;
     }
 }
-
-const map = new mapboxgl.Map({
-    container: 'map', // container ID
-    style: 'mapbox://styles/mileskrell/ckxl9zz5632ey14oafkathv0c', // style URL
-    ...startPos,
-    maxBounds: [[xMin, yMin], [xMax, yMax]], // restrict pan and zoom area
-    touchPitch: false, // disable pitch gesture
-    customAttribution: '<a href="https://github.com/mileskrell/xbus" target="_blank">About XBus</a>',
-});
-
-// disable map rotation using right click + drag
-map.dragRotate.disable();
-// disable map rotation using touch rotation gesture
-map.touchZoomRotate.disableRotation();
-
-// Add geolocate control to the map.
-map.addControl(
-    new mapboxgl.GeolocateControl({
-        positionOptions: {
-            enableHighAccuracy: true
-        },
-        // When active the map will receive updates to the device's location as it changes.
-        trackUserLocation: true,
-        // Draw an arrow next to the location dot to indicate which direction the device is heading.
-        showUserHeading: true
-    })
-);
 
 function onSearchClick(layerID, featureID) {
     const geoJsonToSearch = layerID === 'Rutgers buildings' ? buildingsGeoJSON
@@ -263,6 +235,34 @@ function setSelectedPlace(tappedLayerId, feature, reselecting) {
         selectedPlaceSheet.scrollTop = oldSheetScrollTop;
     }
 }
+
+mapboxgl.accessToken = mapboxKey;
+const map = new mapboxgl.Map({
+    container: 'map', // container ID
+    style: 'mapbox://styles/mileskrell/ckxl9zz5632ey14oafkathv0c', // style URL
+    ...startPos,
+    maxBounds: [[xMin, yMin], [xMax, yMax]], // restrict pan and zoom area
+    touchPitch: false, // disable pitch gesture
+    customAttribution: '<a href="https://github.com/mileskrell/xbus" target="_blank">About XBus</a>',
+});
+
+// disable map rotation using right click + drag
+map.dragRotate.disable();
+// disable map rotation using touch rotation gesture
+map.touchZoomRotate.disableRotation();
+
+// Add geolocate control to the map.
+map.addControl(
+    new mapboxgl.GeolocateControl({
+        positionOptions: {
+            enableHighAccuracy: true
+        },
+        // When active the map will receive updates to the device's location as it changes.
+        trackUserLocation: true,
+        // Draw an arrow next to the location dot to indicate which direction the device is heading.
+        showUserHeading: true
+    })
+);
 
 map.on('load', async () => {
     map.loadImage('images/stop.png', (error, image) => {
