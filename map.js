@@ -8,7 +8,7 @@ switch (document.cookie.substring(7)) {
         startPos = cmdnPos;
         break;
 }
-let routes, segments, stops, vehicles,
+let routes, segments, stops, vehicles, lastFullTransLocFetchTime,
     routeIdToRouteMap, stopIdToStopMap, vehicleIdToVehicleMap, oldVehicleIdToVehicleMap,
     selectedLayerId, selectedFeature, selectedPlaceSheet,
     buildingsGeoJSON, parkingLotsGeoJSON, stopsGeoJSON;
@@ -385,13 +385,21 @@ map.on('load', async () => {
 
     async function fetchBusStuff() {
         try {
-            routes = (await (await fetch('https://transloc-api-1-2.p.rapidapi.com/routes.json?agencies=1323', translocRequestInit)).json())['data'][1323];
-            segments = (await (await fetch("https://transloc-api-1-2.p.rapidapi.com/segments.json?agencies=1323", translocRequestInit)).json())['data'];
-            stops = (await (await fetch("https://transloc-api-1-2.p.rapidapi.com/stops.json?agencies=1323", translocRequestInit)).json())['data'];
             vehicles = (await (await fetch("https://transloc-api-1-2.p.rapidapi.com/vehicles.json?agencies=1323", translocRequestInit)).json())['data'];
         } catch (error) {
             setTimeout(fetchBusStuff, 5000);
             return;
+        }
+        if (!lastFullTransLocFetchTime || (new Date().getTime() - lastFullTransLocFetchTime > 1000 * 60 * 5)) {
+            try {
+                routes = (await (await fetch('https://transloc-api-1-2.p.rapidapi.com/routes.json?agencies=1323', translocRequestInit)).json())['data'][1323];
+                segments = (await (await fetch("https://transloc-api-1-2.p.rapidapi.com/segments.json?agencies=1323", translocRequestInit)).json())['data'];
+                stops = (await (await fetch("https://transloc-api-1-2.p.rapidapi.com/stops.json?agencies=1323", translocRequestInit)).json())['data'];
+                lastFullTransLocFetchTime = new Date().getTime();
+            } catch (error) {
+                setTimeout(fetchBusStuff, 5000);
+                return;
+            }
         }
         vehicles = vehicles[1323] || []; // undefined when there are no vehicles
 
