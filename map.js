@@ -141,13 +141,13 @@ function setSelectedPlace(tappedLayerId, feature, reselecting) {
             const photoUrl = `https://storage.googleapis.com/rutgers-campus-map-building-images-prod/${buildingNumber}/00.jpg`;
             let extraInfoHtml = '';
             if (feature.properties['AlertLinks']) {
-                extraInfoHtml += `<p class="centerText"><b>Alert:</b><br>${feature.properties['AlertLinks']}</p>`;
+                extraInfoHtml += `<p class="center-text"><b>Alert:</b><br>${feature.properties['AlertLinks']}</p>`;
             }
             if (feature.properties['Description']) {
-                extraInfoHtml += `<p class="centerText">${feature.properties['Description']}</p>`;
+                extraInfoHtml += `<p class="center-text">${feature.properties['Description']}</p>`;
             }
             if (feature.properties['Website']) {
-                extraInfoHtml += `<p class="centerText"><b>Website:</b><br><a href='${feature.properties['Website']}' target='_blank'>${feature.properties['Website']}</a></p>`;
+                extraInfoHtml += `<p class="center-text"><b>Website:</b><br><a href='${feature.properties['Website']}' target='_blank'>${feature.properties['Website']}</a></p>`;
             }
             if (feature.properties['departments']) {
                 const departments = JSON.parse(feature.properties['departments']);
@@ -156,11 +156,11 @@ function setSelectedPlace(tappedLayerId, feature, reselecting) {
                 <ul>${departments.map(it => `<li>${it}</li>`).join('')}</ul>
                 </div>`;
             }
-            html = `<div id="selectedPlaceSheet">
-            <h3 class='centerText'>${feature.properties['BldgName']}</h3>
-            <div id='buildingPhotoNumberAddress'>
+            html = `<div id="selected-place-sheet">
+            <h3 class='center-text'>${feature.properties['BldgName']}</h3>
+            <div id='building-photo-number-address'>
                 <img width='100vh' height='100vh' style='margin: 1vh' src=${photoUrl}>
-                <div class='centerText'>
+                <div class='center-text'>
                     <p>Building number: ${buildingNumber}</p>
                     <p>${feature.properties['BldgAddr']}<br>
                     ${feature.properties['City']}, ${feature.properties['State']} ${feature.properties['zip'] || ''}</p>
@@ -174,14 +174,14 @@ function setSelectedPlace(tappedLayerId, feature, reselecting) {
             let extraProps = '';
             if (feature.properties['Contact']) {
                 const contact = feature.properties['Contact'].trim();
-                extraProps += `<p class="centerText"><b>Contact number:</b><br><a href='tel:${contact}'>${contact}</a></p>`;
+                extraProps += `<p class="center-text"><b>Contact number:</b><br><a href='tel:${contact}'>${contact}</a></p>`;
             }
             if (feature.properties['Website']) {
                 const website = feature.properties['Website'].trim();
-                extraProps += `<p class="centerText"><b>Website:</b><br><a href='${website}'>${website}</a></p>`;
+                extraProps += `<p class="center-text"><b>Website:</b><br><a href='${website}'>${website}</a></p>`;
             }
-            html = `<div id="selectedPlaceSheet">
-                <h3 class='centerText'>${feature.properties['Lot_Name'].trim()}</h3>
+            html = `<div id="selected-place-sheet">
+                <h3 class='center-text'>${feature.properties['Lot_Name'].trim()}</h3>
                 ${extraProps}
             </div>`;
             break;
@@ -202,11 +202,11 @@ function setSelectedPlace(tappedLayerId, feature, reselecting) {
                         .map(it => secondsToString((new Date(it.arrival_at) - Date.now()) / 1000)),
                 }))
                 .sort((a, b) => a.routeName > b.routeName ? 1 : -1)
-                .map(route => `<div class="sheetListEntry"><b style="color: #${route.routeColor}">${route.routeName}</b>` + route.arrivalEstimates.join('<br>') + `</div>`);
+                .map(route => `<div class="sheet-list-entry"><b style="color: #${route.routeColor}">${route.routeName}</b>` + route.arrivalEstimates.join('<br>') + `</div>`);
 
-            html = `<div id="selectedPlaceSheet">
-                <h3 class="centerText">${feature.properties['stop_name']}</h3>
-                ${arrivals.length > 0 ? '<div style="text-align: right">' + arrivals.join('<hr>') + '</div>' : '<div class="centerText">No pending arrivals</div>'}
+            html = `<div id="selected-place-sheet">
+                <h3 class="center-text">${feature.properties['stop_name']}</h3>
+                ${arrivals.length > 0 ? '<div style="text-align: right">' + arrivals.join('<hr>') + '</div>' : '<div class="center-text">No pending arrivals</div>'}
             </div>`;
             break;
         }
@@ -219,10 +219,10 @@ function setSelectedPlace(tappedLayerId, feature, reselecting) {
                     stopName: stopIdToStopMap[it.stop_id].name,
                     arrivingIn: secondsToString((new Date(it.arrival_at) - Date.now()) / 1000),
                 }))
-                .map(it => `<div class="sheetListEntry"><b>${it.stopName}</b><div style="flex-shrink: 0">${it.arrivingIn}</div></div>`);
-            html = `<div id="selectedPlaceSheet">
-                <h3 class="centerText">${routeName} - bus #${vehicle.vehicle_id}</h3>
-                ${arrivalEstimates.length > 0 ? arrivalEstimates.join('<br>') : '<div class="centerText">No pending arrivals</div>'}
+                .map(it => `<div class="sheet-list-entry"><b>${it.stopName}</b><div style="flex-shrink: 0">${it.arrivingIn}</div></div>`);
+            html = `<div id="selected-place-sheet">
+                <h3 class="center-text">${routeName} - bus #${vehicle.vehicle_id}</h3>
+                ${arrivalEstimates.length > 0 ? arrivalEstimates.join('<br>') : '<div class="center-text">No pending arrivals</div>'}
             </div>`;
             break;
         }

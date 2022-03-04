@@ -17,13 +17,13 @@ body {
     box-shadow: 0 0 0 2px rgba(0, 0, 0, .1);
 }
 
-.flyToCampusButton {
+.fly-to-campus-button {
     width: 100% !important;
     padding: 5px !important;
     font-weight: bold !important;
 }
 
-#selectedPlaceSheet {
+#selected-place-sheet {
     position: fixed;
     bottom: 0;
     width: 100vw;
@@ -36,7 +36,7 @@ body {
     overflow-wrap: break-word;
 }
 
-#buildingPhotoNumberAddress {
+#building-photo-number-address {
     display: flex;
     justify-content: center;
     align-items: center;
@@ -48,13 +48,13 @@ body {
     align-items: center;
 }
 
-.sheetListEntry {
+.sheet-list-entry {
     display: flex;
     justify-content: space-between;
     align-items: center;
 }
 
-.centerText {
+.center-text {
     text-align: center;
 }
 

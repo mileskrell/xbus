@@ -43,7 +43,7 @@ class FlyToCampusControl {
     // https://github.com/mapbox/mapbox-gl-js/blob/7afee477ba26ccf539a1d35e3ca781691c548536/src/ui/control/navigation_control.js#L143-L148
     _createFlyToButton(buttonText, flyToOptions) {
         const button = domCreate('button', undefined, this._container);
-        button.classList.add('flyToCampusButton');
+        button.classList.add('fly-to-campus-button');
         button.type = 'button';
         button.textContent = buttonText;
         button.addEventListener('click', () => {
