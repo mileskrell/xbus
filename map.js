@@ -221,7 +221,7 @@ function setSelectedPlace(tappedLayerId, feature, reselecting) {
                 }))
                 .map(it => `<div class="sheet-list-entry"><b>${it.stopName}</b><div style="flex-shrink: 0">${it.arrivingIn}</div></div>`);
             html = `<div id="selected-place-sheet">
-                <h3 class="center-text">${routeName} - bus #${vehicle.vehicle_id}</h3>
+                <h3 class="center-text">${routeName} - bus #${vehicle.call_name}</h3>
                 ${arrivalEstimates.length > 0 ? arrivalEstimates.join('<br>') : '<div class="center-text">No pending arrivals</div>'}
             </div>`;
             break;
