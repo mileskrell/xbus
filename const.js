@@ -28,9 +28,9 @@ class FlyToCampusControl {
         this._container.classList.add('mapboxgl-ctrl', 'mapboxgl-ctrl-group');
         this._container.addEventListener('contextmenu', (e) => e.preventDefault());
 
-        this._createFlyToButton('NB', nbPos);
-        this._createFlyToButton('NWK', nwkPos);
-        this._createFlyToButton('CMDN', cmdnPos);
+        this.createFlyToButton('NB', nbPos);
+        this.createFlyToButton('NWK', nwkPos);
+        this.createFlyToButton('CMDN', cmdnPos);
 
         return this._container;
     }
@@ -41,18 +41,15 @@ class FlyToCampusControl {
     }
 
     // https://github.com/mapbox/mapbox-gl-js/blob/7afee477ba26ccf539a1d35e3ca781691c548536/src/ui/control/navigation_control.js#L143-L148
-    _createFlyToButton(buttonText, flyToOptions) {
-        const button = domCreate('button', undefined, this._container);
-        button.classList.add('fly-to-campus-button');
+    createFlyToButton(buttonText, flyToOptions) {
+        const button = domCreate('button', 'fly-to-campus-button', this._container);
         button.type = 'button';
         button.textContent = buttonText;
         button.addEventListener('click', () => {
             document.cookie = `campus=${buttonText}; SameSite=Strict; expires=${new Date(Date.now() + 1000 * 60 * 60 * 24 * 365)}; path=/`;
             this._map.flyTo(flyToOptions);
         });
-        return button;
     }
-
 }
 
 const xMin = -75.56;
