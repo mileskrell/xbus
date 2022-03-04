@@ -8,9 +8,9 @@ function secondsToString(seconds) {
     return `${Math.round(seconds / 60)} min`;
 }
 
-// https://github.com/mapbox/mapbox-gl-js/blob/7afee477ba26ccf539a1d35e3ca781691c548536/src/util/dom.js#L11-L16
-function domCreate(tagName, className, container) {
+function domCreate(tagName, id, className, container) {
     const el = window.document.createElement(tagName);
+    if (id) el.id = id;
     if (className !== undefined) el.className = className;
     if (container) container.appendChild(el);
     return el;
@@ -42,7 +42,7 @@ class FlyToCampusControl {
 
     // https://github.com/mapbox/mapbox-gl-js/blob/7afee477ba26ccf539a1d35e3ca781691c548536/src/ui/control/navigation_control.js#L143-L148
     createFlyToButton(buttonText, flyToOptions) {
-        const button = domCreate('button', 'fly-to-campus-button', this._container);
+        const button = domCreate('button', undefined, 'fly-to-campus-button', this._container);
         button.type = 'button';
         button.textContent = buttonText;
         button.addEventListener('click', () => {

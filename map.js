@@ -35,7 +35,7 @@ class SearchControl {
         this._container = document.createElement('div');
         this._container.classList.add('mapboxgl-ctrl');
 
-        const input = domCreate('input', 'search-box', this._container);
+        const input = domCreate('input', 'search-box', undefined, this._container);
         input.placeholder = 'Stop/building/parking lot';
         input.setAttribute('onfocus', 'this.select()');
 
