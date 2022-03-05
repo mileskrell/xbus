@@ -18,7 +18,12 @@ Things on the map you can tap:
 
 Other features:
 
-- it shows bus routes! But only routes that currently have buses running, so it's not too cluttered
+- it shows line segments for bus routes! But only routes that currently have buses running, so it's not too cluttered
+- there's a button that lets you pick which routes will be shown in the rest of the app. This setting will be remembered
+  for the next time you open XBus. E.g. if you uncheck the box for Route A, then:
+  - you won't see the line segments for Route A on the map
+  - you won't see any Route A buses on the map
+  - when you tap a stop, you won't see any upcoming Route A arrivals
 - there's a search box that lets you search for bus stops/buildings/parking lots
 - there are buttons to let you jump to New Brunswick/Newark/Camden. The next time you open XBus, it'll start off at
   whichever campus you last tapped the button for.
