@@ -1,5 +1,9 @@
+let routes, segments, stops, vehicles, lastFullTransLocFetchTime,
+    routeIdToRouteMap, stopIdToStopMap, vehicleIdToVehicleMap, oldVehicleIdToVehicleMap,
+    selectedLayerId, selectedFeature, selectedPlaceSheet,
+    buildingsGeoJSON, parkingLotsGeoJSON, stopsGeoJSON;
 let startPos = nbPos;
-switch (document.cookie.substring(7)) {
+switch (document.cookie.split('; ').find(it => it.startsWith('campus')).split('=')[1]) {
     case 'NWK':
         startPos = nwkPos;
         break;
@@ -7,10 +11,10 @@ switch (document.cookie.substring(7)) {
         startPos = cmdnPos;
         break;
 }
-let routes, segments, stops, vehicles, lastFullTransLocFetchTime,
-    routeIdToRouteMap, stopIdToStopMap, vehicleIdToVehicleMap, oldVehicleIdToVehicleMap,
-    selectedLayerId, selectedFeature, selectedPlaceSheet,
-    buildingsGeoJSON, parkingLotsGeoJSON, stopsGeoJSON;
+let shownRouteIds = document.cookie.split('; ').find(it => it.startsWith('routes'));
+if (shownRouteIds) {
+    shownRouteIds = JSON.parse(shownRouteIds.split('=')[1]);
+}
 
 class SearchControl {
     constructor() {
@@ -72,6 +76,56 @@ class SearchControl {
         this.buildings = undefined;
         this.lots = undefined;
         this.stops = undefined;
+    }
+}
+
+class RouteFilterControl {
+    onAdd(map) {
+        this._container = document.createElement('div');
+        this._container.classList.add('mapboxgl-ctrl', 'mapboxgl-ctrl-group');
+        this._container.addEventListener('contextmenu', (e) => e.preventDefault());
+
+        const button = domCreate('button', undefined, 'custom-map-control-button', this._container);
+        button.type = 'button';
+        button.textContent = 'Routes';
+        button.addEventListener('click', () => {
+            const routeHtml = routes.sort((a, b) => (a.short_name || a.long_name) > (b.short_name || b.long_name) ? 1 : -1)
+                .map(route => {
+                        const checked = !shownRouteIds || (shownRouteIds.includes(route.route_id));
+                        return `<input type="checkbox" id="${route.route_id}" name="route" value="${route.route_id}" ${checked ? 'checked' : ''}>
+                                <label for="${route.route_id}" style="color: #${route.color}">${route.short_name || route.long_name}</label>`;
+                    }
+                ).join('<br>');
+            $("#dialog")
+                .html(routeHtml)
+                .dialog({
+                    autoOpen: false,
+                    draggable: false,
+                    modal: true,
+                    buttons: [
+                        {
+                            text: 'Update',
+                            click: () => {
+                                const selectedRoutesCheckBoxes = document.querySelectorAll('input[name="route"]:checked');
+                                const selectedRouteIds = [];
+                                for (const route of selectedRoutesCheckBoxes) {
+                                    selectedRouteIds.push(route.value);
+                                }
+                                shownRouteIds = selectedRouteIds;
+                                document.cookie = `routes=${JSON.stringify(shownRouteIds)}; SameSite=Strict; expires=${new Date(Date.now() + 1000 * 60 * 60 * 24 * 365)}; path=/`;
+                                refreshSegmentsVehiclesAndSelectedPlace(true);
+                                $("#dialog").dialog('close');
+                            },
+                        },
+                    ],
+                })
+                .dialog('open');
+        });
+        return this._container;
+    }
+
+    onRemove() {
+        this._container.parentNode.removeChild(this._container);
     }
 }
 
@@ -191,7 +245,7 @@ function setSelectedPlace(tappedLayerId, feature, reselecting) {
                 ? JSON.parse(selectedFeature.properties.arrival_estimates)
                 : selectedFeature.properties.arrival_estimates;
 
-            const arrivals = routes.filter(route => arrivalEstimates.some(it => it.route_id === route.route_id))
+            const arrivals = routes.filter(route => (!shownRouteIds || shownRouteIds.includes(route.route_id)) && arrivalEstimates.some(it => it.route_id === route.route_id))
                 .map(route => ({
                     routeName: route.short_name || route.long_name,
                     routeColor: route.color,
@@ -233,6 +287,79 @@ function setSelectedPlace(tappedLayerId, feature, reselecting) {
     document.body.appendChild(selectedPlaceSheet);
     if (reselecting) {
         selectedPlaceSheet.scrollTop = oldSheetScrollTop;
+    }
+}
+
+async function refreshSegmentsVehiclesAndSelectedPlace(userChangedRoutesShown) {
+    let dashLength = 1;
+    const segmentFeatures = routes
+        .filter(route => (!shownRouteIds || shownRouteIds.includes(route.route_id)) && vehicles.some(vehicle => vehicle.route_id === route.route_id))
+        .map(route => ({
+            type: 'Feature',
+            properties: {
+                route_color: '#' + route.color,
+                line_dasharray: [dashLength, dashLength++],
+            },
+            geometry: {
+                type: 'MultiLineString',
+                // TODO: Do I need to care about whether a route says it includes a segment "forward" or "backward"?
+                coordinates: route.segments.map(route => polyline.decode(segments[route[0]] || '').map(latLng => [latLng[1], latLng[0]])),
+            },
+        }));
+    map.getSource('routes').setData({type: 'FeatureCollection', features: segmentFeatures})
+
+    if (!oldVehicleIdToVehicleMap || userChangedRoutesShown) {
+        const vehicleFeatures = vehicles
+            .filter(it => !shownRouteIds || shownRouteIds.includes(it.route_id))
+            .map(vehicle => ({
+                id: vehicle.vehicle_id,
+                type: 'Feature',
+                geometry: {
+                    type: 'Point',
+                    coordinates: [vehicle.location.lng, vehicle.location.lat],
+                },
+                properties: {
+                    vehicle_id: vehicle.vehicle_id,
+                    heading: vehicle.heading,
+                    route_color: '#' + vehicle.route.color,
+                },
+            }));
+        map.getSource('vehicles').setData({type: 'FeatureCollection', features: vehicleFeatures});
+    } else {
+        // animate from old vehicles
+        const steps = 50; // animation steps
+        for (let counter = 0; counter < steps; counter++) {
+            const curVehicleFeatures = [];
+            vehicles.filter(it => !shownRouteIds || shownRouteIds.includes(it.route_id)).forEach(newVehicle => {
+                const oldVehicle = oldVehicleIdToVehicleMap[newVehicle.vehicle_id] || newVehicle;
+                const latDiff = newVehicle.location.lat - oldVehicle.location.lat;
+                const curLat = oldVehicle.location.lat + counter / steps * latDiff;
+                const lngDiff = newVehicle.location.lng - oldVehicle.location.lng;
+                const curLng = oldVehicle.location.lng + counter / steps * lngDiff;
+                const headingDiff = newVehicle.heading - oldVehicle.heading;
+                const curHeading = oldVehicle.heading + counter / steps * headingDiff;
+                const curVehicleFeature = {
+                    id: newVehicle.vehicle_id,
+                    type: 'Feature',
+                    geometry: {
+                        type: 'Point',
+                        coordinates: [curLng, curLat],
+                    },
+                    properties: {
+                        vehicle_id: newVehicle.vehicle_id,
+                        heading: curHeading,
+                        route_color: '#' + newVehicle.route.color,
+                    },
+                };
+                curVehicleFeatures.push(curVehicleFeature);
+            });
+            map.getSource('vehicles').setData({type: 'FeatureCollection', features: curVehicleFeatures});
+            await sleep(20);
+        }
+    }
+    oldVehicleIdToVehicleMap = vehicleIdToVehicleMap;
+    if (selectedLayerId === 'stops' || selectedLayerId === 'vehicles') {
+        setSelectedPlace(selectedLayerId, selectedFeature, true); // update "selected place" sheet
     }
 }
 
@@ -286,6 +413,8 @@ map.on('load', async () => {
 
     // Add building/parking lot/stop search box
     map.addControl(new SearchControl(), 'top-left');
+
+    map.addControl(new RouteFilterControl(), 'top-left');
 
     // Add controls to fly to NB/NWK/CMDN
     map.addControl(new FlyToCampusControl());
@@ -412,23 +541,6 @@ map.on('load', async () => {
 
         vehicles.forEach(vehicle => vehicle.route = routeIdToRouteMap[vehicle.route_id]);
 
-        let dashLength = 1;
-        const segmentFeatures = routes
-            .filter(route => vehicles.some(vehicle => vehicle.route_id === route.route_id))
-            .map(route => ({
-                type: 'Feature',
-                properties: {
-                    route_color: '#' + route.color,
-                    line_dasharray: [dashLength, dashLength++],
-                },
-                geometry: {
-                    type: 'MultiLineString',
-                    // TODO: Do I need to care about whether a route says it includes a segment "forward" or "backward"?
-                    coordinates: route.segments.map(route => polyline.decode(segments[route[0]] || '').map(latLng => [latLng[1], latLng[0]])),
-                },
-            }));
-        map.getSource('routes').setData({type: 'FeatureCollection', features: segmentFeatures})
-
         const stopFeatures = stops.map(stop => ({
             id: stop.stop_id,
             type: 'Feature',
@@ -448,58 +560,7 @@ map.on('load', async () => {
         stopsGeoJSON = {type: 'FeatureCollection', features: stopFeatures};
         map.getSource('stops').setData(stopsGeoJSON);
 
-        if (!oldVehicleIdToVehicleMap) {
-            const vehicleFeatures = vehicles.map(vehicle => ({
-                id: vehicle.vehicle_id,
-                type: 'Feature',
-                geometry: {
-                    type: 'Point',
-                    coordinates: [vehicle.location.lng, vehicle.location.lat],
-                },
-                properties: {
-                    vehicle_id: vehicle.vehicle_id,
-                    heading: vehicle.heading,
-                    route_color: '#' + vehicle.route.color,
-                },
-            }));
-            map.getSource('vehicles').setData({type: 'FeatureCollection', features: vehicleFeatures});
-        } else {
-            // animate from old vehicles
-            const steps = 50; // animation steps
-            for (let counter = 0; counter < steps; counter++) {
-                const curVehicleFeatures = [];
-                vehicles.forEach(newVehicle => {
-                    const oldVehicle = oldVehicleIdToVehicleMap[newVehicle.vehicle_id] || newVehicle;
-                    const latDiff = newVehicle.location.lat - oldVehicle.location.lat;
-                    const curLat = oldVehicle.location.lat + counter / steps * latDiff;
-                    const lngDiff = newVehicle.location.lng - oldVehicle.location.lng;
-                    const curLng = oldVehicle.location.lng + counter / steps * lngDiff;
-                    const headingDiff = newVehicle.heading - oldVehicle.heading;
-                    const curHeading = oldVehicle.heading + counter / steps * headingDiff;
-                    const curVehicleFeature = {
-                        id: newVehicle.vehicle_id,
-                        type: 'Feature',
-                        geometry: {
-                            type: 'Point',
-                            coordinates: [curLng, curLat],
-                        },
-                        properties: {
-                            vehicle_id: newVehicle.vehicle_id,
-                            heading: curHeading,
-                            route_color: '#' + newVehicle.route.color,
-                        },
-                    };
-                    curVehicleFeatures.push(curVehicleFeature);
-                });
-                map.getSource('vehicles').setData({type: 'FeatureCollection', features: curVehicleFeatures});
-                await sleep(20);
-            }
-        }
-        oldVehicleIdToVehicleMap = vehicleIdToVehicleMap;
-
-        if (selectedLayerId === 'stops' || selectedLayerId === 'vehicles') {
-            setSelectedPlace(selectedLayerId, selectedFeature, true); // update "selected place" sheet
-        }
+        await refreshSegmentsVehiclesAndSelectedPlace(false);
 
         setTimeout(fetchBusStuff, 5000);
     }
