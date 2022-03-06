@@ -326,6 +326,7 @@ async function refreshSegmentsVehiclesAndSelectedPlace(userChangedRoutesShown) {
                 properties: {
                     vehicle_id: vehicle.vehicle_id,
                     heading: vehicle.heading,
+                    route_id: vehicle.route_id,
                     route_color: '#' + vehicle.route.color,
                 },
             }));
@@ -353,6 +354,7 @@ async function refreshSegmentsVehiclesAndSelectedPlace(userChangedRoutesShown) {
                     properties: {
                         vehicle_id: newVehicle.vehicle_id,
                         heading: curHeading,
+                        route_id: newVehicle.route_id,
                         route_color: '#' + newVehicle.route.color,
                     },
                 };
@@ -363,7 +365,9 @@ async function refreshSegmentsVehiclesAndSelectedPlace(userChangedRoutesShown) {
         }
     }
     oldVehicleIdToVehicleMap = vehicleIdToVehicleMap;
-    if (selectedLayerId === 'stops' || selectedLayerId === 'vehicles') {
+    if (selectedLayerId === 'vehicles' && shownRouteIds && !shownRouteIds.includes(selectedFeature.properties.route_id)) {
+        setSelectedPlace(); // clear selection
+    } else if (selectedLayerId === 'stops' || selectedLayerId === 'vehicles') {
         setSelectedPlace(selectedLayerId, selectedFeature, true); // update "selected place" sheet
     }
 }
