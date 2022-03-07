@@ -90,7 +90,7 @@ class RouteFilterControl {
         this._container.classList.add('mapboxgl-ctrl', 'mapboxgl-ctrl-group');
         this._container.addEventListener('contextmenu', (e) => e.preventDefault());
 
-        const button = domCreate('button', undefined, 'custom-map-control-button', this._container);
+        const button = domCreate('button', 'routesButton', 'custom-map-control-button', this._container);
         button.type = 'button';
         button.textContent = 'Routes';
         button.addEventListener('click', () => {
@@ -118,6 +118,7 @@ class RouteFilterControl {
                                 }
                                 shownRouteIds = selectedRouteIds;
                                 document.cookie = `routes=${JSON.stringify(shownRouteIds)}; SameSite=Strict; expires=${new Date(Date.now() + 1000 * 60 * 60 * 24 * 365)}; path=/`;
+                                refreshRoutesButtonText();
                                 refreshSegmentsVehiclesAndSelectedPlace(true);
                                 $("#dialog").dialog('close');
                             },
@@ -293,6 +294,10 @@ function setSelectedPlace(tappedLayerId, feature, reselecting) {
     if (reselecting) {
         selectedPlaceSheet.scrollTop = oldSheetScrollTop;
     }
+}
+
+function refreshRoutesButtonText() {
+    document.getElementById('routesButton').textContent = `Routes (${shownRouteIds !== undefined ? shownRouteIds.length : routes.length}/${routes.length})`;
 }
 
 async function refreshSegmentsVehiclesAndSelectedPlace(userChangedRoutesShown) {
@@ -569,6 +574,7 @@ map.on('load', async () => {
         stopsGeoJSON = {type: 'FeatureCollection', features: stopFeatures};
         map.getSource('stops').setData(stopsGeoJSON);
 
+        refreshRoutesButtonText();
         await refreshSegmentsVehiclesAndSelectedPlace(false);
 
         setTimeout(fetchBusStuff, 5000);
