@@ -301,6 +301,7 @@ function refreshRoutesButton() {
     const routesButton = document.getElementById('routesButton');
     routesButton.disabled = false;
     routesButton.textContent = `Routes (${shownRouteIds !== undefined ? shownRouteIds.length : routes.length}/${routes.length})`;
+    routesButton.style['white-space'] = 'nowrap';
 }
 
 async function refreshSegmentsVehiclesAndSelectedPlace(userChangedRoutesShown) {
