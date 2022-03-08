@@ -93,6 +93,7 @@ class RouteFilterControl {
         const button = domCreate('button', 'routesButton', 'custom-map-control-button', this._container);
         button.type = 'button';
         button.textContent = 'Routes';
+        button.disabled = true;
         button.addEventListener('click', () => {
             const routeHtml = routes.sort((a, b) => (a.short_name || a.long_name) > (b.short_name || b.long_name) ? 1 : -1)
                 .map(route => {
@@ -118,7 +119,7 @@ class RouteFilterControl {
                                 }
                                 shownRouteIds = selectedRouteIds;
                                 document.cookie = `routes=${JSON.stringify(shownRouteIds)}; SameSite=Strict; expires=${new Date(Date.now() + 1000 * 60 * 60 * 24 * 365)}; path=/`;
-                                refreshRoutesButtonText();
+                                refreshRoutesButton();
                                 refreshSegmentsVehiclesAndSelectedPlace(true);
                                 $("#dialog").dialog('close');
                             },
@@ -296,8 +297,10 @@ function setSelectedPlace(tappedLayerId, feature, reselecting) {
     }
 }
 
-function refreshRoutesButtonText() {
-    document.getElementById('routesButton').textContent = `Routes (${shownRouteIds !== undefined ? shownRouteIds.length : routes.length}/${routes.length})`;
+function refreshRoutesButton() {
+    const routesButton = document.getElementById('routesButton');
+    routesButton.disabled = false;
+    routesButton.textContent = `Routes (${shownRouteIds !== undefined ? shownRouteIds.length : routes.length}/${routes.length})`;
 }
 
 async function refreshSegmentsVehiclesAndSelectedPlace(userChangedRoutesShown) {
@@ -574,7 +577,7 @@ map.on('load', async () => {
         stopsGeoJSON = {type: 'FeatureCollection', features: stopFeatures};
         map.getSource('stops').setData(stopsGeoJSON);
 
-        refreshRoutesButtonText();
+        refreshRoutesButton();
         await refreshSegmentsVehiclesAndSelectedPlace(false);
 
         setTimeout(fetchBusStuff, 5000);
