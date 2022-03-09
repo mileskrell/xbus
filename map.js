@@ -107,6 +107,7 @@ class RouteFilterControl {
                 .dialog({
                     autoOpen: false,
                     draggable: false,
+                    maxHeight: window.innerHeight * 0.9,
                     modal: true,
                     buttons: [
                         {
