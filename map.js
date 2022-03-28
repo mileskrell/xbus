@@ -111,6 +111,12 @@ class RouteFilterControl {
                     modal: true,
                     resizable: false,
                     buttons: {
+                        'None': () => {
+                            document.querySelectorAll('input[name="route"]').forEach(it => it.checked = false);
+                        },
+                        'All': () => {
+                            document.querySelectorAll('input[name="route"]').forEach(it => it.checked = true);
+                        },
                         'Save': () => {
                             const selectedRoutesCheckBoxes = document.querySelectorAll('input[name="route"]:checked');
                             const selectedRouteIds = [];
