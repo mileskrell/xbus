@@ -109,6 +109,7 @@ class RouteFilterControl {
                     draggable: false,
                     maxHeight: window.innerHeight * 0.9,
                     modal: true,
+                    resizable: false,
                     buttons: [
                         {
                             text: 'Update',
