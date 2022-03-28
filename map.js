@@ -110,23 +110,20 @@ class RouteFilterControl {
                     maxHeight: window.innerHeight * 0.9,
                     modal: true,
                     resizable: false,
-                    buttons: [
-                        {
-                            text: 'Save',
-                            click: () => {
-                                const selectedRoutesCheckBoxes = document.querySelectorAll('input[name="route"]:checked');
-                                const selectedRouteIds = [];
-                                for (const route of selectedRoutesCheckBoxes) {
-                                    selectedRouteIds.push(route.value);
-                                }
-                                shownRouteIds = selectedRouteIds;
-                                document.cookie = `routes=${JSON.stringify(shownRouteIds)}; SameSite=Strict; expires=${new Date(Date.now() + 1000 * 60 * 60 * 24 * 365)}; path=/`;
-                                refreshRoutesButton();
-                                refreshSegmentsVehiclesAndSelectedPlace(true);
-                                $("#dialog").dialog('close');
-                            },
+                    buttons: {
+                        'Save': () => {
+                            const selectedRoutesCheckBoxes = document.querySelectorAll('input[name="route"]:checked');
+                            const selectedRouteIds = [];
+                            for (const route of selectedRoutesCheckBoxes) {
+                                selectedRouteIds.push(route.value);
+                            }
+                            shownRouteIds = selectedRouteIds;
+                            document.cookie = `routes=${JSON.stringify(shownRouteIds)}; SameSite=Strict; expires=${new Date(Date.now() + 1000 * 60 * 60 * 24 * 365)}; path=/`;
+                            refreshRoutesButton();
+                            refreshSegmentsVehiclesAndSelectedPlace(true);
+                            $("#dialog").dialog('close');
                         },
-                    ],
+                    },
                 })
                 .dialog('open');
         });
