@@ -112,7 +112,7 @@ class RouteFilterControl {
                     resizable: false,
                     buttons: [
                         {
-                            text: 'Update',
+                            text: 'Save',
                             click: () => {
                                 const selectedRoutesCheckBoxes = document.querySelectorAll('input[name="route"]:checked');
                                 const selectedRouteIds = [];
