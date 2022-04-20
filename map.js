@@ -356,8 +356,18 @@ async function refreshSegmentsVehiclesAndSelectedPlace(userChangedRoutesShown) {
                 const curLat = oldVehicle.location.lat + counter / steps * latDiff;
                 const lngDiff = newVehicle.location.lng - oldVehicle.location.lng;
                 const curLng = oldVehicle.location.lng + counter / steps * lngDiff;
-                const headingDiff = newVehicle.heading - oldVehicle.heading;
-                const curHeading = oldVehicle.heading + counter / steps * headingDiff;
+                let headingDiff = newVehicle.heading - oldVehicle.heading;
+                if (headingDiff > 180) {
+                    headingDiff -= 360;
+                } else if (headingDiff < -180) {
+                    headingDiff += 360;
+                }
+                let curHeading = oldVehicle.heading + counter / steps * headingDiff;
+                if (curHeading >= 360) {
+                    curHeading -= 360;
+                } else if (curHeading < 0) {
+                    curHeading += 360;
+                }
                 const curVehicleFeature = {
                     id: newVehicle.vehicle_id,
                     type: 'Feature',
