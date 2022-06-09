@@ -310,9 +310,10 @@ function refreshRoutesButton() {
 }
 
 async function refreshSegmentsVehiclesAndSelectedPlace(userChangedRoutesShown) {
+    const newVehiclesToShow = !shownRouteIds ? vehicles : vehicles.filter(it => shownRouteIds.includes(it.route_id));
     let dashLength = 1;
     const segmentFeatures = routes
-        .filter(route => (!shownRouteIds || shownRouteIds.includes(route.route_id)) && vehicles.some(vehicle => vehicle.route_id === route.route_id))
+        .filter(route => newVehiclesToShow.some(vehicle => vehicle.route_id === route.route_id))
         .map(route => ({
             type: 'Feature',
             properties: {
@@ -328,29 +329,26 @@ async function refreshSegmentsVehiclesAndSelectedPlace(userChangedRoutesShown) {
     map.getSource('routes').setData({type: 'FeatureCollection', features: segmentFeatures})
 
     if (!oldVehicleIdToVehicleMap || userChangedRoutesShown) {
-        const vehicleFeatures = vehicles
-            .filter(it => !shownRouteIds || shownRouteIds.includes(it.route_id))
-            .map(vehicle => ({
-                id: vehicle.vehicle_id,
-                type: 'Feature',
-                geometry: {
-                    type: 'Point',
-                    coordinates: [vehicle.location.lng, vehicle.location.lat],
-                },
-                properties: {
-                    vehicle_id: vehicle.vehicle_id,
-                    heading: vehicle.heading,
-                    route_id: vehicle.route_id,
-                    route_color: '#' + vehicle.route.color,
-                },
-            }));
+        const vehicleFeatures = newVehiclesToShow.map(vehicle => ({
+            id: vehicle.vehicle_id,
+            type: 'Feature',
+            geometry: {
+                type: 'Point',
+                coordinates: [vehicle.location.lng, vehicle.location.lat],
+            },
+            properties: {
+                vehicle_id: vehicle.vehicle_id,
+                heading: vehicle.heading,
+                route_id: vehicle.route_id,
+                route_color: '#' + vehicle.route.color,
+            },
+        }));
         map.getSource('vehicles').setData({type: 'FeatureCollection', features: vehicleFeatures});
     } else {
         // animate from old vehicles
         const steps = 50; // animation steps
         for (let counter = 0; counter < steps; counter++) {
-            const curVehicleFeatures = [];
-            vehicles.filter(it => !shownRouteIds || shownRouteIds.includes(it.route_id)).forEach(newVehicle => {
+            const curVehicleFeatures = newVehiclesToShow.map(newVehicle => {
                 const oldVehicle = oldVehicleIdToVehicleMap[newVehicle.vehicle_id] || newVehicle;
                 const latDiff = newVehicle.location.lat - oldVehicle.location.lat;
                 const curLat = oldVehicle.location.lat + counter / steps * latDiff;
@@ -368,7 +366,7 @@ async function refreshSegmentsVehiclesAndSelectedPlace(userChangedRoutesShown) {
                 } else if (curHeading < 0) {
                     curHeading += 360;
                 }
-                const curVehicleFeature = {
+                return {
                     id: newVehicle.vehicle_id,
                     type: 'Feature',
                     geometry: {
@@ -382,7 +380,6 @@ async function refreshSegmentsVehiclesAndSelectedPlace(userChangedRoutesShown) {
                         route_color: '#' + newVehicle.route.color,
                     },
                 };
-                curVehicleFeatures.push(curVehicleFeature);
             });
             map.getSource('vehicles').setData({type: 'FeatureCollection', features: curVehicleFeatures});
             await sleep(20);
