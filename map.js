@@ -1,7 +1,8 @@
 let routes, segments, stops, vehicles, lastFullTransLocFetchTime,
     routeIdToRouteMap, stopIdToStopMap, vehicleIdToVehicleMap, oldVehicleIdToVehicleMap,
     selectedLayerId, selectedFeature, selectedPlaceSheet, shownRouteIds,
-    buildingsGeoJSON, parkingLotsGeoJSON, stopsGeoJSON;
+    buildingsGeoJSON, parkingLotsGeoJSON, stopsGeoJSON,
+    announcements;
 let startPos = nbPos;
 if (document.cookie) {
     const campusCookie = document.cookie.split('; ').find(it => it.startsWith('campus'));
@@ -110,6 +111,7 @@ class RouteFilterControl {
                     maxHeight: window.innerHeight * 0.9,
                     modal: true,
                     resizable: false,
+                    title: 'Routes',
                     buttons: {
                         'None': () => {
                             document.querySelectorAll('input[name="route"]').forEach(it => it.checked = false);
@@ -127,6 +129,43 @@ class RouteFilterControl {
                             document.cookie = `routes=${JSON.stringify(shownRouteIds)}; SameSite=Strict; expires=${new Date(Date.now() + 1000 * 60 * 60 * 24 * 365)}; path=/`;
                             refreshRoutesButton();
                             refreshSegmentsVehiclesAndSelectedPlace(true);
+                            $("#dialog").dialog('close');
+                        },
+                    },
+                })
+                .dialog('open');
+        });
+        return this._container;
+    }
+
+    onRemove() {
+        this._container.parentNode.removeChild(this._container);
+    }
+}
+
+class AnnouncementsControl {
+    onAdd(map) {
+        this._container = document.createElement('div');
+        this._container.classList.add('mapboxgl-ctrl', 'mapboxgl-ctrl-group');
+        this._container.addEventListener('contextmenu', (e) => e.preventDefault());
+
+        const button = domCreate('button', 'announcementsButton', 'custom-map-control-button', this._container);
+        button.type = 'button';
+        button.style.display = 'none';
+        button.addEventListener('click', () => {
+            const announcementsHtml = announcements.map(it => `<h3>${it.title}</h3>${it.html}`)
+                .join('<br><hr><br>');
+            $("#dialog")
+                .html(announcementsHtml)
+                .dialog({
+                    autoOpen: false,
+                    draggable: false,
+                    maxHeight: window.innerHeight * 0.9,
+                    modal: true,
+                    resizable: false,
+                    title: 'Announcements',
+                    buttons: {
+                        'Close': () => {
                             $("#dialog").dialog('close');
                         },
                     },
@@ -390,6 +429,16 @@ async function refreshSegmentsVehiclesAndSelectedPlace(userChangedRoutesShown) {
     }
 }
 
+function refreshAnnouncementsButton() {
+    const announcementsButton = document.getElementById('announcementsButton');
+    if (announcements && announcements.length > 0) {
+        announcementsButton.textContent = `Announcements (${announcements.length})`;
+        announcementsButton.style.display = 'block';
+    } else {
+        announcementsButton.style.display = 'none';
+    }
+}
+
 mapboxgl.accessToken = mapboxKey;
 const map = new mapboxgl.Map({
     container: 'map', // container ID
@@ -442,6 +491,8 @@ map.on('load', async () => {
     map.addControl(new SearchControl(), 'top-left');
 
     map.addControl(new RouteFilterControl(), 'top-left');
+
+    map.addControl(new AnnouncementsControl(), 'top-left');
 
     // Add controls to fly to NB/NWK/CMDN
     map.addControl(new FlyToCampusControl());
@@ -593,5 +644,19 @@ map.on('load', async () => {
         setTimeout(fetchBusStuff, 5000);
     }
 
+    async function fetchAnnouncements() {
+        try {
+            announcements = (await (await fetch('https://feeds.transloc.com/3/announcements?contents=true&agencies=1323')).json()).announcements;
+        } catch (error) {
+            setTimeout(fetchAnnouncements, 5 * 60 * 1000);
+            return;
+        }
+
+        refreshAnnouncementsButton();
+
+        setTimeout(fetchAnnouncements, 5 * 60 * 1000);
+    }
+
     fetchBusStuff();
+    fetchAnnouncements();
 });

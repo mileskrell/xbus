@@ -19,6 +19,7 @@ Things on the map you can tap:
 Other features:
 
 - it shows line segments for bus routes! But only routes that currently have buses running, so it's not too cluttered
+- it shows [Rutgers bus service announcements](https://rutgers.transloc.com/announcements)
 - there's a button that lets you pick which routes will be shown in the rest of the app. This setting will be remembered
   for the next time you open XBus. E.g. if you uncheck the box for Route A, then:
   - you won't see the line segments for Route A on the map
