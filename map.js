@@ -206,9 +206,6 @@ function setSelectedPlace(tappedLayerId, feature, reselecting) {
             const buildingNumber = feature.properties['BldgNum'];
             const photoUrl = `https://storage.googleapis.com/rutgers-campus-map-building-images-prod/${buildingNumber}/00.jpg`;
             let extraInfoHtml = '';
-            if (feature.properties['AlertLinks']) {
-                extraInfoHtml += `<p class="center-text"><b>Alert:</b><br>${feature.properties['AlertLinks']}</p>`;
-            }
             if (feature.properties['Description']) {
                 extraInfoHtml += `<p class="center-text">${feature.properties['Description']}</p>`;
             }
