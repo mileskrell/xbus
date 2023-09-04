@@ -660,3 +660,13 @@ map.on('load', async () => {
     fetchBusStuff();
     fetchAnnouncements();
 });
+
+$('#dialog')
+    .html("Rutgers has switched from <a href='https://transloc.com' target='_blank'>TransLoc</a> to <a href='https://passiotech.com' target='_blank'>Passio</a> for its bus data and it's unclear whether Passio makes this data available to third-party apps like XBus.<br><br>You can still use XBus to view buildings and parking lots, but you'll have to use Passio's app to track buses for now.<br><br>I've sent Passio an email and will update when I hear back.<br><br>— Miles, 2023-09-04")
+    .dialog({
+        draggable: false,
+        maxHeight: window.innerHeight * 0.9,
+        modal: true,
+        resizable: false,
+        title: 'No bus data available',
+    });
