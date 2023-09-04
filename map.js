@@ -670,3 +670,4 @@ $('#dialog')
         resizable: false,
         title: 'No bus data available',
     });
+document.activeElement.blur()
